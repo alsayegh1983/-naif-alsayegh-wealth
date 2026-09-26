@@ -18,6 +18,8 @@ const empty=()=>({assets:{Cash:0,'Saudi Stocks':0,Crypto:0,Gold:0,Property:0,Oth
 let data; try{data=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){data=null} if(!data)data=empty(); data.assets=data.assets||empty().assets;data.debts=data.debts||empty().debts;data.income=data.income||empty().income;data.goal=data.goal||empty().goal;data.goal.year=Number(data.goal.year||2026);data.goal.amount=Number(data.goal.amount||40000);data.tx=Array.isArray(data.tx)?data.tx:[];data.statements=Array.isArray(data.statements)?data.statements:[];
 // V37 migration: remove the previously imported July 2026 credit-card extraction so it can be re-imported with Transaction Date logic.
 if(!data.__v37CardMigration){const oldNames=data.statements.filter(s=>/CardMonthly_202607\.pdf/i.test(s.name||'')).map(s=>s.name);if(oldNames.length){data.tx=data.tx.filter(t=>!oldNames.includes(t.source));data.statements=data.statements.filter(s=>!oldNames.includes(s.name));}data.__v37CardMigration=true;localStorage.setItem(KEY,JSON.stringify(data));}
+// V38 migration: remove the July 2026 card extraction again so the corrected amount parsing is applied.
+if(!data.__v38CardMigration){const oldNames=data.statements.filter(s=>/CardMonthly_202607\.pdf/i.test(s.name||'')).map(s=>s.name);if(oldNames.length){data.tx=data.tx.filter(t=>!oldNames.includes(t.source));data.statements=data.statements.filter(s=>!oldNames.includes(s.name));}data.__v38CardMigration=true;localStorage.setItem(KEY,JSON.stringify(data));}
 try{const nw=JSON.parse(localStorage.getItem(NW)||'null');if(nw){data.assets=nw.assets||data.assets;data.debts=nw.debts||data.debts}}catch(e){} try{const inc=JSON.parse(localStorage.getItem(INCOME)||'null');if(inc)data.income=inc}catch(e){} try{const g=JSON.parse(localStorage.getItem(GOAL)||'null');if(g){data.goal.year=Number(g.year||data.goal.year);data.goal.amount=Number(g.amount||data.goal.amount)}}catch(e){}
 let hidden=localStorage.getItem('naif-hide')==='1', dashPeriod='monthly', reportPeriod='monthly', reportMonth=latestMonth(), txFilter='all';
 function save(){localStorage.setItem(KEY,JSON.stringify(data));return true} function money(n){return hidden?'SAR ••••••':'SAR '+Number(n||0).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2})} function pct(n){return hidden?'••••':Math.round(n||0)+'%'} function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)} function monthKey(d){const m=String(d||'').match(/(20\d{2})[-\/]?(\d{2})[-\/]?(\d{2})/);return m?m[1]+'-'+m[2]:''} function monthLabel(m){if(!m)return '';const [y,mo]=m.split('-');return new Date(Number(y),Number(mo)-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'})} function latestMonth(){const ms=data?.tx?.map(t=>monthKey(t.date)).filter(Boolean)||[];return (ms.sort().pop())||DEFAULT} function months(){const s=new Set(data.tx.map(t=>monthKey(t.date)).filter(Boolean));data.statements.forEach(x=>{if(x.month)s.add(x.month);(x.months||[]).forEach(m=>s.add(m))});if(!s.size)s.add(DEFAULT);return [...s].sort()} function txFor(m){return data.tx.filter(t=>monthKey(t.date)===m)} function periodTx(mode,m){if(mode==='monthly')return txFor(m);const [y,mo]=m.split('-').map(Number);let start=mode==='quarterly'?Math.floor((mo-1)/3)*3+1:1;let end=mode==='quarterly'?start+2:12;return data.tx.filter(t=>{const k=monthKey(t.date);if(!k)return false;const [yy,mm]=k.split('-').map(Number);return yy===y&&mm>=start&&mm<=end})} function stats(tx){const inc=tx.filter(t=>t.type==='income').reduce((a,t)=>a+Number(t.amount||0),0);const gross=tx.filter(t=>t.type==='expense'&&t.category!=='Cash Withdrawal').reduce((a,t)=>a+Number(t.amount||0),0);const refunds=tx.filter(t=>t.type==='refund').reduce((a,t)=>a+Number(t.amount||0),0);const exp=Math.max(0,gross-refunds);return{tx,inc,exp,saved:inc-exp,rate:inc?((inc-exp)/inc*100):0}} function recurringFor(mode){const r=data.income;const base=Number(r.salary||0)+Number(r.extra||0)+Number(r.bsf||0);return base*(mode==='quarterly'?3:mode==='yearly'?12:1)} function displayStats(mode,m){const s=stats(periodTx(mode,m));s.inc=recurringFor(mode);s.saved=s.inc-s.exp;s.rate=s.inc?s.saved/s.inc*100:0;return s}
@@ -131,18 +133,31 @@ function parseCardTransactionsFromTokens(tokens,fileName){
     const raw=seg.join(' ');
     const lower=raw.toLowerCase();
     const nums=[];
-    for(const x of seg){
+    for(let j=0;j<seg.length;j++){
+      const x=seg[j];
       const m=x.match(/^(?:CR\s*)?([\d,]+\.\d{2})(?:\s*SAR)?$/i);
-      if(m) nums.push({value:Number(m[1].replace(/,/g,'')),credit:/^CR\s*/i.test(x)});
+      if(m) nums.push({value:Number(m[1].replace(/,/g,'')),credit:/^CR\s*/i.test(x),idx:j});
     }
     if(!nums.length) continue;
-    const amount=nums[0].value;
+    // The PDF can place the previous transaction's markup/VAT immediately before
+    // the next merchant. Never use that first number. Prefer the transaction
+    // amount pattern: amount + 0.00 + billing amount + SAR.
+    let amountEntry=null;
+    for(const n of nums){
+      if(seg[n.idx+1]==='0.00' && /^[-]?([\d,]+\.\d{2})\s*SAR$/i.test(seg[n.idx+2]||'')){ amountEntry=n; }
+    }
+    if(!amountEntry){
+      // For international/fee rows, the transaction amount is the first amount
+      // before the fee details, as in 565.43 / 12.71.
+      amountEntry=nums[0];
+    }
+    const amount=amountEntry.value;
     if(!Number.isFinite(amount)||amount<=0) continue;
     const txDate=tokens[txPos];
     const [dd,mm,yy]=txDate.split('/');
     const date='20'+yy+'-'+mm+'-'+dd;
     let type='expense',category='Other',merchant='Credit Card Purchase';
-    const isCredit=nums[0].credit||/advance payment\s*\/\s*top-up|\bcr\b/.test(lower);
+    const isCredit=amountEntry.credit||/advance payment\s*\/\s*top-up|\bcr\b/.test(lower);
 
     // Credits/reversals are never income. They reduce card spending instead.
     if(/murabaha refund|\brefund\b/.test(lower)&&isCredit){type='refund';category='Card Refund';merchant='Card Refund'}
