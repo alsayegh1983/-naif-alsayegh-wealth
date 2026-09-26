@@ -20,7 +20,7 @@ button{font:inherit}.primary,.secondary{border-radius:13px;padding:12px 14px;bor
 <main>
 <section id="dashboard" class="list active">
 <div class="hero"><div class="label">NET WORTH</div><div class="net" id="networth">SAR 0</div><div class="change" id="heroNote">Demo statements loaded locally</div></div>
-<div class="seg"><button class="on">Monthly</button><button>Quarterly</button><button>Yearly</button></div>
+<div class="seg" id="dashboardPeriodSeg"><button class="on" onclick="setDashboardPeriod('monthly',this)">Monthly</button><button onclick="setDashboardPeriod('quarterly',this)">Quarterly</button><button onclick="setDashboardPeriod('yearly',this)">Yearly</button></div>
 <div class="grid"><div class="metric"><span>Income / Credits</span><b id="income">SAR 0</b></div><div class="metric"><span>True Spending</span><b id="spending">SAR 0</b></div><div class="metric"><span>Saved</span><b id="saved">SAR 0</b></div><div class="metric"><span>Savings rate</span><b id="rate">0%</b></div></div>
 <div class="card"><div class="row"><span class="title" id="dashboardMonth">September 2026</span><span class="pill" id="dashboardStatementCount">3 statements</span></div><div class="muted" style="margin-top:7px">You can now keep July, August and September as separate months and compare them.</div><div id="statementSummary"></div></div>
 <div class="card"><div class="row"><span class="title">Recurring household expenses</span><span class="pill">SAR 3,200 / month</span></div><div class="statement"><div class="row"><span>Driver Salary</span><b>SAR 1,800</b></div><div class="muted">Recurring monthly · Expense</div></div><div class="statement"><div class="row"><span>Housemaid Salary</span><b>SAR 1,400</b></div><div class="muted">Recurring monthly · Expense</div></div></div><div class="card"><div class="row"><span class="title">Recurring financing deductions</span><span class="pill">SAR 11,040.14 / month</span></div><div class="statement"><div class="row"><span>Financing installment</span><b>SAR 6,000.00</b></div><div class="muted">Month-end recurring deduction · Expense / debt payment</div></div><div class="statement"><div class="row"><span>Financing installment</span><b>SAR 5,040.14</b></div><div class="muted">Month-end recurring deduction · Expense / debt payment</div></div></div><div class="card"><div class="row"><span class="title">Spending by category</span><span class="muted">Detected</span></div><div id="categories"></div></div>
@@ -33,7 +33,7 @@ button{font:inherit}.primary,.secondary{border-radius:13px;padding:12px 14px;bor
 <div class="card"><div class="title">How the importer treats transactions</div><div class="statement"><b>Own-account transfer</b><div class="muted">Excluded from spending</div></div><div class="statement"><b>Credit-card payment</b><div class="muted">Excluded when it represents repayment of card spending</div></div><div class="statement"><b>Card purchase</b><div class="muted">Counts as spending once, with category detection</div></div><div class="statement"><b>Foreign purchase</b><div class="muted">Keeps SAR billing amount, original currency and fees</div></div><div class="statement"><b>Recurring household salary</b><div class="muted">Driver SAR 1,800/month and housemaid SAR 1,400/month count as expenses</div></div><div class="statement"><b>Recurring financing deductions</b><div class="muted">SAR 6,000 + SAR 5,040.14 at month-end count as recurring expenses/debt payments</div></div><div class="review">New statements are added to the month. Transactions of SAR 10,000 or more are flagged for review unless a known rule already identifies them (for example, an investment-account transfer). Duplicate transactions can be flagged before they affect the report.</div></div></section>
 
 <section id="reports" class="list">
-<div class="card"><div class="row"><div><div class="title">Wealth Dashboard</div><div class="muted" id="reportPeriod">September 2026</div></div><select id="reportMonth" onchange="setReportMonth(this.value)" style="width:auto;min-width:150px;margin:0"><option value="2026-09">September 2026</option><option value="2026-08">August 2026</option><option value="2026-07">July 2026</option></select></div>
+<div class="card"><div class="seg" id="reportPeriodSeg" style="margin-bottom:12px"><button class="on" onclick="setReportPeriod('monthly',this)">Monthly</button><button onclick="setReportPeriod('quarterly',this)">Quarterly</button><button onclick="setReportPeriod('yearly',this)">Yearly</button></div><div class="row"><div><div class="title">Wealth Dashboard</div><div class="muted" id="reportPeriod">September 2026</div></div><select id="reportMonth" onchange="setReportMonth(this.value)" style="width:auto;min-width:150px;margin:0"><option value="2026-09">September 2026</option><option value="2026-08">August 2026</option><option value="2026-07">July 2026</option></select></div>
 <div class="grid" style="margin-top:14px"><div class="metric"><span>Income</span><b id="rIncome">SAR 0</b></div><div class="metric"><span>Expenses</span><b id="rExpense">SAR 0</b></div><div class="metric"><span>Saved</span><b id="rSaved">SAR 0</b></div><div class="metric"><span>Saving rate</span><b id="rRate">0%</b></div></div></div>
 <div class="card"><div class="row"><span class="title">Month-to-month comparison</span><span class="muted">vs previous month</span></div><div class="grid" style="margin-top:12px"><div class="metric"><span>Income change</span><b id="cmpIncome">—</b></div><div class="metric"><span>Expense change</span><b id="cmpExpense">—</b></div><div class="metric"><span>Savings change</span><b id="cmpSaved">—</b></div><div class="metric"><span>Saving-rate change</span><b id="cmpRate">—</b></div></div><div class="muted" style="margin-top:10px">Positive/negative changes are shown as amounts or percentage points. No ranking is applied.</div></div>
 <div class="card"><div class="row"><span class="title">Monthly trend</span><span class="muted">Income · Expenses · Savings</span></div><div id="monthlyTrend" style="margin-top:12px"></div></div>
@@ -51,11 +51,23 @@ button{font:inherit}.primary,.secondary{border-radius:13px;padding:12px 14px;bor
 <script>
 const DEMO_MONTH='2026-09';
 let reportMonth=localStorage.getItem('naif-report-month')||DEMO_MONTH;
+let dashboardPeriod=localStorage.getItem('naif-dashboard-period')||'monthly';
+let reportPeriodMode=localStorage.getItem('naif-report-period')||'monthly';
 const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
 function monthLabel(m){const [y,mo]=m.split('-');return monthNames[Number(mo)-1]+' '+y}
 function monthKey(date){return String(date||'').slice(0,7)}
 function monthStats(m){const tx=data.tx.filter(t=>monthKey(t.date)===m);const exp=tx.filter(t=>t.type==='expense').reduce((a,t)=>a+Number(t.amount||0),0);const inc=tx.filter(t=>t.type==='income').reduce((a,t)=>a+Number(t.amount||0),0);return {tx,exp,inc,saved:inc-exp,rate:inc?((inc-exp)/inc*100):0}}
 function setReportMonth(m){reportMonth=m;localStorage.setItem('naif-report-month',m);renderReports()}
+function periodTransactions(mode, anchor='2026-09'){
+ const d=new Date(anchor+'-01T00:00:00'); const y=d.getFullYear(), m=d.getMonth();
+ if(mode==='monthly') return data.tx.filter(t=>String(t.date||'').slice(0,7)===anchor);
+ if(mode==='quarterly'){ const q=Math.floor(m/3); const start=q*3; return data.tx.filter(t=>{const td=new Date((t.date||'')+'T00:00:00'); return td.getFullYear()===y && td.getMonth()>=start && td.getMonth()<start+3;}); }
+ return data.tx.filter(t=>String(t.date||'').slice(0,4)===String(y));
+}
+function periodLabel(mode,anchor='2026-09'){const d=new Date(anchor+'-01T00:00:00');if(mode==='monthly')return monthLabel(anchor);if(mode==='quarterly')return `Q${Math.floor(d.getMonth()/3)+1} ${d.getFullYear()}`;return String(d.getFullYear())}
+function setDashboardPeriod(mode,btn){dashboardPeriod=mode;localStorage.setItem('naif-dashboard-period',mode);document.querySelectorAll('#dashboardPeriodSeg button').forEach(x=>x.classList.remove('on'));btn.classList.add('on');render()}
+function setReportPeriod(mode,btn){reportPeriodMode=mode;localStorage.setItem('naif-report-period',mode);document.querySelectorAll('#reportPeriodSeg button').forEach(x=>x.classList.remove('on'));btn.classList.add('on');renderReports()}
+
 function pctChange(a,b){if(!Number(b)) return a? 'n/a':'0%'; return ((a-b)/Math.abs(b)*100).toFixed(1)+'%'}
 function signedMoney(v){return (v>0?'+':'')+fmt(v)}
 const KEY='naif-wealth-v6';
@@ -115,11 +127,12 @@ applyReviewRules();save();
 function tab(id,btn){document.querySelectorAll('.list').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');render()}
 function fmt(n){return sar(n)}
 function render(){
- const exp=data.tx.filter(t=>t.type==='expense'), inc=data.tx.filter(t=>t.type==='income'), tr=data.tx.filter(t=>t.type==='transfer');
+ const periodTx=periodTransactions(dashboardPeriod,DEMO_MONTH);
+ const exp=periodTx.filter(t=>t.type==='expense'), inc=periodTx.filter(t=>t.type==='income'), tr=periodTx.filter(t=>t.type==='transfer');
  const spending=exp.reduce((a,t)=>a+t.amount,0), income=inc.reduce((a,t)=>a+t.amount,0), saved=income-spending;
  document.getElementById('income').textContent=fmt(income);document.getElementById('spending').textContent=fmt(spending);document.getElementById('saved').textContent=fmt(saved);document.getElementById('rate').textContent=income?Math.round(saved/income*100)+'%':'0%';
  document.getElementById('networth').textContent=fmt(Object.values(data.assets).reduce((a,b)=>a+b,0)-Object.values(data.debts).reduce((a,b)=>a+b,0));
- document.getElementById('heroNote').textContent=`${data.tx.length} imported transactions · transfers excluded from spending`;
+ document.getElementById('heroNote').textContent=`${periodTx.length} transactions · ${periodLabel(dashboardPeriod,DEMO_MONTH)} · transfers excluded from spending`;
  const sources=[['Bank 1','Account statement'],['Bank 2','BSF account statement'],['Credit Card','Al Rajhi credit card statement']];
  document.getElementById('statementSummary').innerHTML=sources.map(s=>`<div class="statement"><div class="row"><b>${s[0]}</b><span class="status">Imported</span></div><div class="muted">${s[1]}</div></div>`).join('');
  document.getElementById('dashboardMonth').textContent=monthLabel(DEMO_MONTH);document.getElementById('dashboardStatementCount').textContent='3 statements';
@@ -134,9 +147,15 @@ function openImport(){tab('import',document.querySelectorAll('.tabs button')[2])
 function openModal(title,body){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=body;document.getElementById('modal').style.display='flex'}function closeModal(){document.getElementById('modal').style.display='none'}
 function openReview(index){const t=data.tx[index];if(!t)return;const opts=['Income','Expense','Transfer','Cash Withdrawal'];document.getElementById('modalTitle').textContent='Review transaction';document.getElementById('modalBody').innerHTML=`<div class="card" style="margin:0 0 14px"><div class="merchant" style="font-size:18px">${t.merchant}</div><div class="muted" style="margin-top:6px">${t.date} · ${t.source}</div><div style="font-size:24px;font-weight:800;margin-top:10px">${fmt(t.amount)}</div></div><div class="muted" style="margin-bottom:8px">What is this transaction?</div><div style="display:grid;gap:8px">${opts.map(o=>`<button class="secondary full" onclick="approveReview(${index},'${o}')">${o}</button>`).join('')}</div><div class="muted" style="margin-top:12px;font-size:11px">Transfer and Cash Withdrawal are excluded from spending.</div>`;document.getElementById('modal').style.display='flex'}
 function approveReview(index,choice){const t=data.tx[index];if(!t)return;if(choice==='Income'){t.type='income';t.category=t.merchant.toLowerCase().includes('gulfmas')?'Business Income':'Income'}else if(choice==='Expense'){t.type='expense';t.category=t.category==='Income'?'Other':t.category}else{t.type='transfer';t.category=choice==='Cash Withdrawal'?'Cash Withdrawal':'Transfer'}t.review=false;save();closeModal();render()}
+function aggregateStats(tx){const inc=tx.filter(t=>t.type==='income').reduce((a,t)=>a+Number(t.amount||0),0);const exp=tx.filter(t=>t.type==='expense').reduce((a,t)=>a+Number(t.amount||0),0);return {tx,inc,exp,saved:inc-exp,rate:inc?((inc-exp)/inc*100):0};}
 function renderReports(){
- const current=monthStats(reportMonth), prevDate=new Date(reportMonth+'-01T00:00:00');prevDate.setMonth(prevDate.getMonth()-1);const prevMonth=prevDate.toISOString().slice(0,7);const prev=monthStats(prevMonth);
- document.getElementById('reportMonth').value=reportMonth;document.getElementById('reportPeriod').textContent=monthLabel(reportMonth);
+ const current=reportPeriodMode==='monthly'?monthStats(reportMonth):aggregateStats(periodTransactions(reportPeriodMode,reportMonth));
+ const prevDate=new Date(reportMonth+'-01T00:00:00');
+ let prev;
+ if(reportPeriodMode==='monthly'){prevDate.setMonth(prevDate.getMonth()-1);prev=monthStats(prevDate.toISOString().slice(0,7));}
+ else {const prevAnchor=new Date(reportMonth+'-01T00:00:00');if(reportPeriodMode==='quarterly')prevAnchor.setMonth(prevAnchor.getMonth()-3);else prevAnchor.setFullYear(prevAnchor.getFullYear()-1);prev=aggregateStats(periodTransactions(reportPeriodMode,prevAnchor.toISOString().slice(0,7)));}
+
+ document.getElementById('reportMonth').value=reportMonth;document.getElementById('reportPeriod').textContent=periodLabel(reportPeriodMode,reportMonth);document.querySelectorAll('#reportPeriodSeg button').forEach((b,i)=>b.classList.toggle('on',['monthly','quarterly','yearly'][i]===reportPeriodMode));document.getElementById('reportMonth').style.display=reportPeriodMode==='monthly'?'block':'none';
  document.getElementById('rIncome').textContent=fmt(current.inc);document.getElementById('rExpense').textContent=fmt(current.exp);document.getElementById('rSaved').textContent=fmt(current.saved);document.getElementById('rRate').textContent=Math.round(current.rate)+'%';
  document.getElementById('cmpIncome').textContent=prev.tx.length?signedMoney(current.inc-prev.inc)+' · '+pctChange(current.inc,prev.inc):'—';
  document.getElementById('cmpExpense').textContent=prev.tx.length?signedMoney(current.exp-prev.exp)+' · '+pctChange(current.exp,prev.exp):'—';
