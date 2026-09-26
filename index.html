@@ -30,7 +30,7 @@ button{font:inherit}.primary,.secondary{border-radius:13px;padding:12px 14px;bor
 <section id="transactions" class="list"><div class="card"><div class="row"><span class="title">Transactions</span><button class="secondary smallbtn" onclick="openImport()">Import</button></div><div class="seg"><button class="on" onclick="filterTx('all',this)">All</button><button onclick="filterTx('expense',this)">Expenses</button><button onclick="filterTx('transfer',this)">Transfers</button></div><div id="txList"></div></div></section>
 
 <section id="import" class="list"><div class="card"><div class="row"><span class="title">Bank Statements</span><span class="pill">Private on device</span></div><p class="muted">PDFs are processed in the browser. They are not uploaded to GitHub.</p><div class="upload"><label for="pdfInput" style="display:block;color:white;font-weight:700">＋ Upload bank or card statement</label><div class="muted" style="margin-top:7px">Supports the statement formats used in this demo.</div><input id="pdfInput" type="file" accept="application/pdf" multiple></div><div id="importResults"></div></div>
-<div class="card"><div class="title">How the importer treats transactions</div><div class="statement"><b>Own-account transfer</b><div class="muted">Excluded from spending</div></div><div class="statement"><b>Credit-card payment</b><div class="muted">Excluded when it represents repayment of card spending</div></div><div class="statement"><b>Card purchase</b><div class="muted">Counts as spending once, with category detection</div></div><div class="statement"><b>Foreign purchase</b><div class="muted">Keeps SAR billing amount, original currency and fees</div></div><div class="statement"><b>Recurring household salary</b><div class="muted">Driver SAR 1,800/month and housemaid SAR 1,400/month count as expenses</div></div><div class="statement"><b>Recurring financing deductions</b><div class="muted">SAR 6,000 + SAR 5,040.14 at month-end count as recurring expenses/debt payments</div></div><div class="review">New statements are added to the month. Duplicate transactions can be flagged before they affect the report.</div></div></section>
+<div class="card"><div class="title">How the importer treats transactions</div><div class="statement"><b>Own-account transfer</b><div class="muted">Excluded from spending</div></div><div class="statement"><b>Credit-card payment</b><div class="muted">Excluded when it represents repayment of card spending</div></div><div class="statement"><b>Card purchase</b><div class="muted">Counts as spending once, with category detection</div></div><div class="statement"><b>Foreign purchase</b><div class="muted">Keeps SAR billing amount, original currency and fees</div></div><div class="statement"><b>Recurring household salary</b><div class="muted">Driver SAR 1,800/month and housemaid SAR 1,400/month count as expenses</div></div><div class="statement"><b>Recurring financing deductions</b><div class="muted">SAR 6,000 + SAR 5,040.14 at month-end count as recurring expenses/debt payments</div></div><div class="review">New statements are added to the month. Transactions of SAR 10,000 or more are flagged for review unless a known rule already identifies them (for example, an investment-account transfer). Duplicate transactions can be flagged before they affect the report.</div></div></section>
 
 <section id="reports" class="list"><div class="card"><div class="row"><span class="title">Monthly Report</span><span class="muted">September Demo</span></div><div class="grid" style="margin-top:12px"><div class="metric"><span>Statements</span><b>3</b></div><div class="metric"><span>Review items</span><b id="reportReview">0</b></div><div class="metric"><span>Card spend</span><b id="cardSpend">SAR 0</b></div><div class="metric"><span>Transfers excluded</span><b id="transfersExcluded">0</b></div></div><canvas id="chart" class="chart" width="900" height="260"></canvas><div class="muted">The report separates actual spending from money moving between your own accounts.</div></div></section>
 </main>
@@ -40,7 +40,7 @@ button{font:inherit}.primary,.secondary{border-radius:13px;padding:12px 14px;bor
 <script type="module">import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs"; window.pdfjsLib=pdfjsLib;</script>
 <script>
 const DEMO_MONTH='2026-09';
-const KEY='naif-wealth-v3';
+const KEY='naif-wealth-v6';
 const sar=n=>new Intl.NumberFormat('en-SA',{style:'currency',currency:'SAR',maximumFractionDigits:0}).format(Number(n||0));
 const sample={assets:{Cash:0,'Saudi Stocks':0,Crypto:0,Gold:0,Property:0,Other:0},debts:{Loans:0,'Credit Cards':59.12},tx:[
 {date:'2026-09-01',merchant:'Sukuk Capital',amount:11604.10,type:'income',category:'Income',source:'Bank 1'},
@@ -53,12 +53,11 @@ const sample={assets:{Cash:0,'Saudi Stocks':0,Crypto:0,Gold:0,Property:0,Other:0
 {date:'2026-09-05',merchant:'Vehicle registration · SADAD',amount:300,type:'expense',category:'Transport',source:'Bank 1'},
 {date:'2026-09-06',merchant:'GULFMAS · business transfer',amount:50000,type:'income',category:'Business Income',source:'Bank 1'},
 {date:'2026-09-06',merchant:'BARQ SAFE ACCOUNT',amount:1800,type:'expense',category:'Driver Salary',source:'Bank 1',recurring:true},
-{date:'2026-09-06',merchant:'Internet',amount:20000,type:'expense',category:'Bills',source:'Bank 1',review:true},
+{date:'2026-09-06',merchant:'Bank → Investment Account',amount:20000,type:'transfer',category:'Investment Transfer',source:'Bank 1',review:false},
 {date:'2026-09-09',merchant:'SADAD bill',amount:520.69,type:'expense',category:'Bills',source:'Bank 1'},
 {date:'2026-09-09',merchant:'Credit card payment · 3789',amount:112.64,type:'transfer',category:'Card Payment',source:'Bank 1'},
 {date:'2026-09-14',merchant:'Online Purchase · STC Bank',amount:300,type:'expense',category:'Shopping',source:'Bank 1'},
 {date:'2026-09-15',merchant:'NAHED ALI M ALSHARIF E',amount:10,type:'expense',category:'Food',source:'Bank 1'},
-{date:'2026-09-21',merchant:'Investment account → bank',amount:20000,type:'transfer',category:'Investment Transfer',source:'Bank 1'},
 {date:'2026-09-24',merchant:'Abdullah Abdulaziz Al Sayegh',amount:50,type:'expense',category:'Personal / Family',source:'Bank 1'},
 {date:'2026-09-25',merchant:'Investment account → bank',amount:6000,type:'transfer',category:'Investment Transfer',source:'Bank 1'},
 {date:'2026-09-29',merchant:'Financing installment',amount:6000,type:'expense',category:'Financing / Loan',source:'Bank 1',recurring:true},
@@ -93,6 +92,8 @@ const sample={assets:{Cash:0,'Saudi Stocks':0,Crypto:0,Gold:0,Property:0,Other:0
 ]};
 let data=JSON.parse(localStorage.getItem(KEY)||'null')||sample;
 function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function applyReviewRules(){data.tx.forEach(t=>{if(Math.abs(Number(t.amount))>=10000 && !['transfer'].includes(t.type) && !t.review){t.review=true}})}
+applyReviewRules();save();
 function tab(id,btn){document.querySelectorAll('.list').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');render()}
 function fmt(n){return sar(n)}
 function render(){
@@ -117,6 +118,7 @@ function drawChart(){const c=document.getElementById('chart'),x=c.getContext('2d
 document.getElementById('pdfInput').addEventListener('change',async e=>{const files=[...e.target.files];if(!files.length)return;document.getElementById('importResults').innerHTML='<div class="review">Reading '+files.length+' statement(s) locally…</div>';for(const f of files){const result={name:f.name,status:'Imported for review',transactions:0};try{const text=await readPdfText(f);result.transactions=detectTransactionCount(text);result.status='Read locally · review required';}catch(err){result.status='Could not read automatically';}document.getElementById('importResults').innerHTML+=`<div class="statement"><div class="row"><b>${f.name}</b><span class="status">${result.status}</span></div><div class="muted">Detected ${result.transactions} transaction-like rows. No file upload is performed.</div></div>`} });
 async function readPdfText(file){if(!window.pdfjsLib){await new Promise(r=>setTimeout(r,800))}const pdfjs=window.pdfjsLib;if(!pdfjs)throw new Error('PDF engine unavailable');pdfjs.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';const buf=await file.arrayBuffer();const pdf=await pdfjs.getDocument({data:buf}).promise;let out='';for(let i=1;i<=pdf.numPages;i++){const p=await pdf.getPage(i);const c=await p.getTextContent();out+=c.items.map(x=>x.str).join(' ')+'\n'}return out}
 function detectTransactionCount(t){return (t.match(/\b\d{1,3}(?:,\d{3})*\.\d{2}\b/g)||[]).length}
+function classifyTransaction(merchant,amount,type,category){const a=Math.abs(Number(amount));if(a>=10000 && type!=='transfer')return {review:true};return {review:false}}
 function classifyRecurringExpense(merchant,amount){const m=String(merchant||'').toUpperCase();const a=Math.abs(Number(amount));if(m.includes('BARQ SAFE ACCOUNT')&&Math.abs(a-1800)<0.01)return {type:'expense',category:'Driver Salary',recurring:true};if(m.includes('ETAFERAHU KASSE LEGESE')&&Math.abs(a-1400)<0.01)return {type:'expense',category:'Housemaid Salary',recurring:true};if((m.includes('خصم أقساط متأخرة تمويل')||m.includes('FINANCING INSTALLMENT')||m.includes('FINANCING'))&&(Math.abs(a-6000)<0.01||Math.abs(a-5040.14)<0.01))return {type:'expense',category:'Financing / Loan',recurring:true};return null}
 render();
 </script></body></html>
