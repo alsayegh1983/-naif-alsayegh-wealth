@@ -13,7 +13,7 @@
 <div class="toast" id="toast"></div><div class="modal" id="modal"><div class="sheet"><h2 id="modalTitle">Review</h2><div id="modalBody"></div><button class="primary full" data-action="closeModal">Done</button></div></div>
 <script>
 (function(){'use strict';
-const KEY='naif-wealth-v26'; const NW='naif-wealth-v24-nw'; const INCOME='naif-wealth-v24-income'; const DEFAULT='2026-09';
+const KEY='naif-wealth-v26'; /* V34 PDF parser */ const NW='naif-wealth-v24-nw'; const INCOME='naif-wealth-v24-income'; const DEFAULT='2026-09';
 const empty=()=>({assets:{Cash:0,'Saudi Stocks':0,Crypto:0,Gold:0,Property:0,Other:0},debts:{Loans:0,'Credit Cards':0},income:{salary:30715,extra:857.23,bsf:1983.75},tx:[],statements:[]});
 let data; try{data=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){data=null} if(!data)data=empty(); data.assets=data.assets||empty().assets;data.debts=data.debts||empty().debts;data.income=data.income||empty().income;data.tx=Array.isArray(data.tx)?data.tx:[];data.statements=Array.isArray(data.statements)?data.statements:[];
 try{const nw=JSON.parse(localStorage.getItem(NW)||'null');if(nw){data.assets=nw.assets||data.assets;data.debts=nw.debts||data.debts}}catch(e){} try{const inc=JSON.parse(localStorage.getItem(INCOME)||'null');if(inc)data.income=inc}catch(e){}
@@ -42,10 +42,76 @@ function binaryStringFromBytes(a){let s='';const step=0x8000;for(let i=0;i<a.len
 async function inflateBytes(bytes){const ds=new DecompressionStream('deflate');const stream=new Blob([bytes]).stream().pipeThrough(ds);return new Uint8Array(await new Response(stream).arrayBuffer())}
 function parseCMapText(s){const map=new Map();for(const block of s.matchAll(/\d+\s+beginbfrange\s*([\s\S]*?)\s*endbfrange/g)){for(const line of block[1].split(/\r?\n/)){const m=line.match(/<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>/);if(!m)continue;let a=parseInt(m[1],16),b=parseInt(m[2],16),d=parseInt(m[3],16);for(let c=a;c<=b;c++)map.set(c,String.fromCodePoint(d+c-a))}}for(const block of s.matchAll(/\d+\s+beginbfchar\s*([\s\S]*?)\s*endbfchar/g)){for(const line of block[1].split(/\r?\n/)){const m=line.match(/<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>/);if(m)map.set(parseInt(m[1],16),String.fromCodePoint(parseInt(m[2],16)))}}return map}
 function decodePdfBytes(raw,maps){if(!raw.length)return '';let printable=true;for(const x of raw){if(x!==9&&x!==10&&x!==13&&(x<32||x>126)){printable=false;break}}if(printable)return new TextDecoder('utf-8',{fatal:false}).decode(raw);let best='',bestHit=0;for(const map of maps){if(raw.length%2)continue;let out='',hit=0;for(let i=0;i<raw.length;i+=2){const code=raw[i]*256+raw[i+1];const ch=map.get(code);if(ch!==undefined){out+=ch;hit++}else out+='�'}if(hit>bestHit){best=out;bestHit=hit}}return bestHit?best:binaryStringFromBytes(raw)}
-function extractParenStrings(s,maps){const out=[];for(let i=0;i<s.length;i++){if(s[i]!=='(')continue;let j=i+1,depth=1,esc=false;for(;j<s.length;j++){const c=s[j];if(esc){esc=false;continue}if(c==='\\'){esc=true;continue}if(c==='(')depth++;else if(c===')'){depth--;if(depth===0)break}}if(depth!==0)break;const after=s.slice(j+1,j+7);if(/^(?:\s*)TJ|^(?:\s*)Tj/.test(after)){out.push(decodePdfBytes(bytesFromBinaryString(s.slice(i+1,j)),maps))}i=j}return out}
 function normalizePdfText(t){let x=(t||'').replace(/[\u0000-\u001f]+/g,' ').replace(/\s+/g,' ').trim();try{x=x.normalize('NFKC')}catch{}return x}
 function searchText(t){const x=normalizePdfText(t),arab=[...x].filter(c=>/\p{Script=Arabic}/u.test(c)).length;if(arab>0){return x+' '+[...x].reverse().join('')}return x}
-async function extractPdfTokensOffline(file){const buf=new Uint8Array(await file.arrayBuffer());const bin=binaryStringFromBytes(buf);const streams=[];const re=/(\d+)\s+\d+\s+obj\s*([\s\S]*?)\bstream\r?\n([\s\S]*?)\r?\nendstream/g;let m;while((m=re.exec(bin))){let raw=bytesFromBinaryString(m[3]);try{if(/\/FlateDecode/.test(m[2]))raw=await inflateBytes(raw)}catch{continue}const text=binaryStringFromBytes(raw);streams.push(text)}const maps=[];for(const text of streams)if(text.includes('begincmap'))maps.push(parseCMapText(text));const tokens=[];for(const text of streams){if(!text.includes('BT'))continue;tokens.push(...extractParenStrings(text,maps))}return tokens.map(normalizePdfText).filter(Boolean)}
+function extractPdfTextStrings(s,maps){
+  const out=[];
+  function decodeHex(h){
+    h=h.replace(/\s+/g,'');
+    if(!h || h.length%2) return '';
+    const raw=new Uint8Array(h.length/2);
+    for(let i=0;i<raw.length;i++)raw[i]=parseInt(h.slice(i*2,i*2+2),16);
+    return decodePdfBytes(raw,maps);
+  }
+  for(let i=0;i<s.length;){
+    const ch=s[i];
+    if(ch==='('){
+      let j=i+1,depth=1,esc=false;
+      for(;j<s.length;j++){
+        const c=s[j];
+        if(esc){esc=false;continue}
+        if(c==='\\'){esc=true;continue}
+        if(c==='(')depth++;
+        else if(c===')'){depth--;if(depth===0)break}
+      }
+      if(depth===0 && /^\s*T[Jj]/.test(s.slice(j+1,j+8))) out.push(decodePdfBytes(bytesFromBinaryString(s.slice(i+1,j)),maps));
+      i=j+1;continue;
+    }
+    if(ch==='<'){
+      const j=s.indexOf('>',i+1);
+      if(j>i && /^[0-9A-Fa-f\s]+$/.test(s.slice(i+1,j)) && /^\s*T[Jj]/.test(s.slice(j+1,j+8))){
+        out.push(decodeHex(s.slice(i+1,j)));i=j+1;continue;
+      }
+    }
+    if(ch==='['){
+      const j=s.indexOf(']TJ',i+1);
+      if(j>i){
+        const block=s.slice(i+1,j);
+        for(const m of block.matchAll(/\((?:\\.|[^\\)])*\)|<([0-9A-Fa-f\s]+)>/g)){
+          const token=m[0];
+          if(token[0]==='(') out.push(decodePdfBytes(bytesFromBinaryString(token.slice(1,-1)),maps));
+          else out.push(decodeHex(m[1]||''));
+        }
+        i=j+3;continue;
+      }
+    }
+    i++;
+  }
+  return out;
+}
+async function extractPdfTokensOffline(file){
+  const buf=new Uint8Array(await file.arrayBuffer());
+  const bin=binaryStringFromBytes(buf);
+  const streams=[];
+  const objRe=/(\d+)\s+\d+\s+obj\s*([\s\S]*?)\s*endobj/g;
+  let om;
+  while((om=objRe.exec(bin))){
+    const body=om[2];
+    const sm=/\bstream\r?\n([\s\S]*?)\r?\nendstream/.exec(body);
+    if(!sm) continue;
+    let raw=bytesFromBinaryString(sm[1]);
+    try{if(/\/FlateDecode/.test(body))raw=await inflateBytes(raw)}catch{continue}
+    streams.push(binaryStringFromBytes(raw));
+  }
+  const maps=[];
+  for(const text of streams) if(text.includes('begincmap')) maps.push(parseCMapText(text));
+  const tokens=[];
+  for(const text of streams){
+    if(!text.includes('BT')) continue;
+    tokens.push(...extractPdfTextStrings(text,maps));
+  }
+  return tokens.map(normalizePdfText).filter(Boolean);
+}
 function parseCardTransactionsFromTokens(tokens,fileName){
   const dateRe=/^\d{2}\/\d{2}\/\d{2}$/;
   const datePos=[];
