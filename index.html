@@ -374,5 +374,6 @@ document.addEventListener('click',function(e){
  if(btn.closest('.tabs')){e.stopPropagation();}
 },true);
 
-render();
-</script></body></html>
+Object.assign(window,{togglePrivacy:togglePrivacy,setDashboardPeriod:setDashboardPeriod,filterTx:filterTx,openImport:openImport,setReportPeriod:setReportPeriod,setReportMonth:setReportMonth,exportPDF:exportPDF,exportJSON:exportJSON,saveRecurringIncome:saveRecurringIncome,saveNetWorth:saveNetWorth,resetAllData:resetAllData,tab:tab,openModal:openModal,closeModal:closeModal,openReview:openReview,approveReview:approveReview,save:save});
+
+render();</script></body></html>
