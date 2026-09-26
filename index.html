@@ -22,14 +22,14 @@ button{font:inherit}.primary,.secondary{border-radius:13px;padding:12px 14px;bor
 <header><div class="profile"><img src="naif-profile.jpeg"><div style="flex:1"><div class="eyebrow">PERSONAL WEALTH</div><h1>Naif Alsayegh Wealth</h1><div class="period" id="period">September 2026</div></div><button class="privacyBtn" id="privacyBtn" onclick="togglePrivacy()">◉ Hide</button></div></header>
 <main>
 <section id="dashboard" class="list active">
-<div class="hero"><div class="row"><div><div class="label">NET WORTH</div><div class="net" id="networth">SAR 0</div></div><div class="pill" id="wealthPeriodPill">September 2026</div></div><div class="change" id="heroNote">Your current wealth position</div></div>
+<div class="hero"><div class="row"><div><div class="label">NET WORTH</div><div class="net" id="networth">SAR 0</div></div><div class="pill" id="wealthPeriodPill">September 2026</div></div></div>
 <div class="seg" id="dashboardPeriodSeg"><button class="on" onclick="setDashboardPeriod('monthly',this)">Monthly</button><button onclick="setDashboardPeriod('quarterly',this)">Quarterly</button><button onclick="setDashboardPeriod('yearly',this)">Yearly</button></div>
 <div class="grid"><div class="metric"><span>Income</span><b id="income">SAR 0</b></div><div class="metric"><span>Spending</span><b id="spending">SAR 0</b></div><div class="metric"><span>Saved</span><b id="saved">SAR 0</b></div><div class="metric"><span>Savings rate</span><b id="rate">0%</b></div></div>
 <div class="card"><div class="row"><span class="sectionHead">Cash flow</span><span class="dashSub" id="cashflowPeriod">September 2026</span></div><div class="cashflowRow"><div class="cashflowLabel"><span>Income</span><span id="cfIncome">SAR 0</span></div><div class="bar"><div class="fill" id="cfIncomeBar" style="width:0%"></div></div></div><div class="cashflowRow"><div class="cashflowLabel"><span>Spending</span><span id="cfSpend">SAR 0</span></div><div class="bar"><div class="fill" id="cfSpendBar" style="width:0%"></div></div></div><div class="cashflowRow"><div class="cashflowLabel"><span>Saved</span><span id="cfSaved">SAR 0</span></div><div class="bar"><div class="fill" id="cfSavedBar" style="width:0%"></div></div></div></div>
 <div class="card"><div class="row"><span class="sectionHead">Wealth</span><span class="dashSub">Current position</span></div><div class="miniGrid" style="margin-top:12px"><div class="miniMetric"><span>Assets</span><b id="dashAssets">SAR 0</b></div><div class="miniMetric"><span>Liabilities</span><b id="dashLiabilities">SAR 0</b></div><div class="miniMetric"><span>Net worth</span><b id="dashNetWorth">SAR 0</b></div></div></div>
 <div class="card"><div class="row"><span class="sectionHead">Top spending</span><span class="dashSub" id="topSpendLabel">Selected period</span></div><div id="categories"></div></div>
 <div class="card"><div class="row"><span class="sectionHead">Recurring</span><span class="pill" id="recurringTotal">SAR 0 / month</span></div><div class="statement"><div class="row"><span>Monthly income</span><b id="dashRecurringIncome">SAR 33,555.98</b></div></div><div class="statement"><div class="row"><span>Household expenses</span><b id="dashHousehold">SAR 3,200</b></div></div><div class="statement"><div class="row"><span>Financing</span><b id="dashFinancing">SAR 11,040.14</b></div></div></div>
-<div class="card" id="reviewCard"><div class="row"><span class="sectionHead">Needs review</span><span class="pill" id="reviewCount">0</span></div><div id="reviewPreview"></div></div>
+
 </section>
 
 <section id="transactions" class="list"><div class="card"><div class="row"><span class="title">Transactions</span><button class="secondary smallbtn" onclick="openImport()">Import</button></div><div class="seg"><button class="on" onclick="filterTx('all',this)">All</button><button onclick="filterTx('expense',this)">Expenses</button><button onclick="filterTx('transfer',this)">Transfers</button></div><div id="txList"></div></div></section>
@@ -45,7 +45,8 @@ button{font:inherit}.primary,.secondary{border-radius:13px;padding:12px 14px;bor
 <div class="card"><div class="row"><span class="title">Income breakdown</span><span class="muted" id="incomeTotalLabel">SAR 0</span></div><div id="reportIncomeSources" style="margin-top:8px"></div></div>
 <div class="card"><div class="row"><span class="title">Biggest expenses</span><span class="muted">Selected month</span></div><div id="biggestExpenses"></div></div>
 <div class="card"><div class="row"><span class="title">Recurring expenses</span><span class="muted">Monthly commitments</span></div><div id="recurringReport"></div></div>
-<div class="card"><div class="row"><span class="title">Data quality</span><span class="muted">Selected month</span></div><div class="grid" style="margin-top:12px"><div class="metric"><span>Statements</span><b id="reportStatements">0</b></div><div class="metric"><span>Needs review</span><b id="reportReview">0</b></div><div class="metric"><span>Transfers excluded</span><b id="transfersExcluded">0</b></div><div class="metric"><span>Card spend</span><b id="cardSpend">SAR 0</b></div></div></div>
+<div class="card"><div class="row"><span class="title">Needs Review</span><span class="pill" id="reportReviewPill">0</span></div><div id="reportReviewList" style="margin-top:8px"></div></div>
+<div class="card"><div class="row"><span class="title">Data quality</span><span class="muted">Selected month</span></div><div class="grid" style="margin-top:12px"><div class="metric"><span>Statements</span><b id="reportStatements">0</b></div><div class="metric"><span>Transfers excluded</span><b id="transfersExcluded">0</b></div><div class="metric"><span>Card spend</span><b id="cardSpend">SAR 0</b></div></div></div>
 </section>
 </main>
 <section id="settings" class="list"><div class="card"><div class="title">Settings</div><div class="statement"><div class="row"><span><b>Export PDF backup</b><div class="muted">Creates a printable PDF report with your financial data.</div></span><button class="secondary smallbtn" onclick="exportPDF()">Export PDF</button></div></div><div class="statement"><div class="row"><span><b>Export data backup</b><div class="muted">Creates a JSON backup that can be restored later.</div></span><button class="secondary smallbtn" onclick="exportJSON()">Export</button></div></div></div><div class="card"><div class="title">Monthly recurring income</div><div class="grid" style="margin-top:10px"><div><label>Salary</label><input id="ri_salary" type="number" inputmode="decimal"></div><div><label>Extra income</label><input id="ri_extra" type="number" inputmode="decimal"></div><div><label>BSF income</label><input id="ri_bsf" type="number" inputmode="decimal"></div></div><button class="primary full" onclick="saveRecurringIncome()">Save Monthly Income</button></div><div class="card"><div class="title">Net Worth</div><div class="muted">Update your assets and liabilities. Net worth = assets − liabilities.</div><div id="netWorthEditor" style="margin-top:10px"></div><button class="primary full" onclick="saveNetWorth()">Save Net Worth</button></div><div class="card"><div class="title">Reset all financial data</div><div class="muted">Deletes all imported statements, transactions, reviews and saved financial data from this iPhone.</div><button class="danger full" style="margin-top:12px" onclick="resetAllData()">Reset Data</button></div></section>
@@ -130,7 +131,7 @@ if((data.tx||[]).length===0 && (data.statements||[]).length){ data.statements=[]
 function saveSafeCleanup(){ try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){} }
 function resetAllData(){if(!confirm('Delete ALL stored Wealth data on this iPhone? This cannot be undone.'))return; data={assets:{Cash:0,'Saudi Stocks':0,Crypto:0,Gold:0,Property:0,Other:0},debts:{Loans:0,'Credit Cards':0},recurringIncome:{salary:30715,extra:857.23,bsf:1983.75},tx:[],statements:[]}; localStorage.setItem(KEY,JSON.stringify(data)); localStorage.setItem('naif-wealth-initialized','1'); location.reload();}
 
-function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(data));const check=localStorage.getItem(KEY);if(!check)throw new Error('Storage verification failed');return true}catch(e){console.error(e);alert('Could not save on this iPhone. Please check Safari website storage.');return false}}
 function applyReviewRules(){data.tx.forEach(t=>{if(Math.abs(Number(t.amount))>=10000 && !['transfer'].includes(t.type) && !t.review){t.review=true}})}
 applyReviewRules();save();
 function tab(id,btn){document.querySelectorAll('.list').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');render()}
@@ -142,7 +143,7 @@ function fmtPct(n){return numbersHidden?'••••':Math.round(Number(n||0))+
 function saveRecurringIncome(){data.recurringIncome={salary:Number(document.getElementById('ri_salary').value||0),extra:Number(document.getElementById('ri_extra').value||0),bsf:Number(document.getElementById('ri_bsf').value||0)};save();render();alert('Monthly income saved.')}
 function renderRecurringIncomeEditor(){const r=data.recurringIncome||{salary:30715,extra:857.23,bsf:1983.75};['salary','extra','bsf'].forEach(k=>{const el=document.getElementById('ri_'+k);if(el)el.value=Number(r[k]||0)});}
 function renderNetWorthEditor(){const a=data.assets||{},d=data.debts||{};const fields=[['Cash','Asset'],['Saudi Stocks','Asset'],['Crypto','Asset'],['Gold','Asset'],['Property','Asset'],['Other','Asset'],['Loans','Liability'],['Credit Cards','Liability']];document.getElementById('netWorthEditor').innerHTML=fields.map(([k,type])=>`<div class="row" style="padding:8px 0"><span>${k}</span><input id="nw_${k.replace(/\s/g,'_')}" type="number" inputmode="decimal" value="${Number((type==='Asset'?a:d)[k]||0)}" style="width:140px;background:#0b1113;color:#fff;border:1px solid var(--line);border-radius:10px;padding:9px"></div>`).join('')}
-function saveNetWorth(){data.assets=data.assets||{};data.debts=data.debts||{};['Cash','Saudi Stocks','Crypto','Gold','Property','Other'].forEach(k=>data.assets[k]=Number(document.getElementById('nw_'+k.replace(/\s/g,'_')).value||0));['Loans','Credit Cards'].forEach(k=>data.debts[k]=Number(document.getElementById('nw_'+k).value||0));save();render();alert('Net worth saved.');}
+function saveNetWorth(){data.assets=data.assets||{};data.debts=data.debts||{};const assetKeys=['Cash','Saudi Stocks','Crypto','Gold','Property','Other'];const debtKeys=['Loans','Credit Cards'];assetKeys.forEach(k=>{const el=document.getElementById('nw_'+k.replace(/\s/g,'_'));if(el)data.assets[k]=Number(el.value||0)});debtKeys.forEach(k=>{const el=document.getElementById('nw_'+k);if(el)data.debts[k]=Number(el.value||0)});if(save()){render();alert('Net worth saved successfully.');}}
 function exportJSON(){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`Naif-Wealth-Backup-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function exportPDF(){const tx=(data.tx||[]).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));const assets=data.assets||{},debts=data.debts||{};const at=Object.values(assets).reduce((x,y)=>x+Number(y||0),0),dt=Object.values(debts).reduce((x,y)=>x+Number(y||0),0);const inc=tx.filter(t=>t.type==='income').reduce((x,t)=>x+Number(t.amount||0),0),exp=tx.filter(t=>t.type==='expense').reduce((x,t)=>x+Number(t.amount||0),0);document.getElementById('printArea').innerHTML=`<div style="font-family:Arial;padding:24px;color:#111"><h1>Naif Alsayegh Wealth</h1><p>Financial backup · ${new Date().toLocaleDateString()}</p><h2>Summary</h2><p>Net Worth: SAR ${fmt(at-dt).replace('SAR ','')}</p><p>Income: SAR ${fmt(inc).replace('SAR ','')}</p><p>Expenses: SAR ${fmt(exp).replace('SAR ','')}</p><p>Saved: SAR ${fmt(inc-exp).replace('SAR ','')}</p><h2>Assets</h2><p>${Object.entries(assets).map(([k,v])=>`${k}: SAR ${Number(v||0).toLocaleString()}`).join('<br>')}</p><h2>Liabilities</h2><p>${Object.entries(debts).map(([k,v])=>`${k}: SAR ${Number(v||0).toLocaleString()}`).join('<br>')}</p><h2>Transactions (${tx.length})</h2><table style="width:100%;border-collapse:collapse;font-size:11px"><tr><th style="text-align:left;border-bottom:1px solid #ccc">Date</th><th style="text-align:left;border-bottom:1px solid #ccc">Description</th><th style="text-align:left;border-bottom:1px solid #ccc">Type</th><th style="text-align:right;border-bottom:1px solid #ccc">Amount</th><th style="text-align:left;border-bottom:1px solid #ccc">Category</th></tr>${tx.map(t=>`<tr><td style="padding:5px 2px;border-bottom:1px solid #eee">${t.date||''}</td><td style="padding:5px 2px;border-bottom:1px solid #eee">${t.merchant||''}</td><td style="padding:5px 2px;border-bottom:1px solid #eee">${t.type||''}</td><td style="padding:5px 2px;border-bottom:1px solid #eee;text-align:right">SAR ${Number(t.amount||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="padding:5px 2px;border-bottom:1px solid #eee">${t.category||''}</td></tr>`).join('')}</table></div>`;window.print();}
 function render(){
@@ -155,13 +156,12 @@ function render(){
  const assetTotal=Object.values(data.assets||{}).reduce((a,b)=>a+Number(b||0),0), debtTotal=Object.values(data.debts||{}).reduce((a,b)=>a+Number(b||0),0), nw=assetTotal-debtTotal; document.getElementById('dashAssets').textContent=fmt(assetTotal);document.getElementById('dashLiabilities').textContent=fmt(debtTotal);document.getElementById('dashNetWorth').textContent=fmt(nw); document.getElementById('wealthPeriodPill').textContent=periodLabel(dashboardPeriod,reportMonth);document.getElementById('cashflowPeriod').textContent=periodLabel(dashboardPeriod,reportMonth);document.getElementById('cfIncome').textContent=fmt(income);document.getElementById('cfSpend').textContent=fmt(spending);document.getElementById('cfSaved').textContent=fmt(saved);document.getElementById('cfIncomeBar').style.width='100%';document.getElementById('cfSpendBar').style.width=(income?Math.min(100,spending/income*100):0)+'%';document.getElementById('cfSavedBar').style.width=(income?Math.max(0,Math.min(100,saved/income*100)):0)+'%';document.getElementById('rate').textContent=fmtPct(income?saved/income*100:0);
  const ri=data.recurringIncome||{};document.getElementById('dashRecurringIncome').textContent=fmt(Number(ri.salary||0)+Number(ri.extra||0)+Number(ri.bsf||0));
  document.getElementById('networth').textContent=fmt(Object.values(data.assets).reduce((a,b)=>a+b,0)-Object.values(data.debts).reduce((a,b)=>a+b,0));
- document.getElementById('heroNote').textContent=`${periodTx.length} transactions · ${periodLabel(dashboardPeriod,reportMonth)}`;
- const sources=[['Bank 1','Account statement'],['Bank 2','BSF account statement'],['Credit Card','Al Rajhi credit card statement']];
- document.getElementById('statementSummary').innerHTML=sources.map(s=>`<div class="statement"><div class="row"><b>${s[0]}</b><span class="status">Imported</span></div><div class="muted">${s[1]}</div></div>`).join('');
+ 
+ const actualStatements=(data.statements||[]); document.getElementById('statementSummary').innerHTML=actualStatements.length?actualStatements.slice(-6).reverse().map(s=>`<div class="statement"><div class="row"><b>${s.name||s.source||'Statement'}</b><span class="status">Imported</span></div><div class="muted">${s.period||s.month||'Multiple months'} · ${s.transactions||0} transactions</div></div>`).join(''):'<div class="empty">No statements yet.</div>'; 
  document.getElementById('dashboardMonth').textContent=monthLabel(reportMonth);document.getElementById('dashboardStatementCount').textContent=(data.statements||[]).filter(s=>s.month===reportMonth).length+' statements';
  const stmtMonths=(data.statements||[]).slice().sort((a,b)=>String(b.month).localeCompare(String(a.month))); document.getElementById('statementCountTotal').textContent=stmtMonths.length+' statements'; document.getElementById('statementList').innerHTML=stmtMonths.map(s=>`<div class="statement"><div class="row"><span>${monthLabel(s.month)}</span><span class="status">Imported</span></div><div class="muted">${s.name||s.source||'Statement'}</div></div>`).join('')||'<div class="empty">No statements yet.</div>';
  const cats={};exp.forEach(t=>cats[t.category]=(cats[t.category]||0)+t.amount);const top=Object.entries(cats).sort((a,b)=>b[1]-a[1]);document.getElementById('categories').innerHTML=top.slice(0,8).map(([k,v])=>`<div style="margin-top:12px"><div class="row"><span>${k}</span><span>${fmt(v)}</span></div><div class="bar"><div class="fill" style="width:${Math.min(100,v/spending*100)}%"></div></div></div>`).join(''); document.getElementById('topSpendLabel').textContent=periodLabel(dashboardPeriod,reportMonth);
- const reviews=data.tx.filter(t=>t.review);document.getElementById('reviewCount').textContent=numbersHidden?'••••':reviews.length+' items'; document.getElementById('reviewCard').style.display=reviews.length?'block':'none';document.getElementById('reportReview').textContent=reviews.length;document.getElementById('reviewPreview').innerHTML=reviews.map((t)=>{const i=data.tx.indexOf(t);return `<div class="tx" onclick="openReview(${i})" style="cursor:pointer"><div class="row"><span><span class="merchant">${t.merchant}</span><small>${t.source} · ${t.date} · ${fmt(t.amount)}</small></span><span class="badge review">Review →</span></div></div>`}).join('')||'<div class="empty">Nothing needs review.</div>';
+
  document.getElementById('cardSpend').textContent=fmt(data.tx.filter(t=>t.source==='Credit Card'&&t.type==='expense').reduce((a,t)=>a+t.amount,0));document.getElementById('transfersExcluded').textContent=tr.length;
  renderTx('all');renderReports();
 }
@@ -187,7 +187,7 @@ function renderReports(){
  const incs={};current.tx.filter(t=>t.type==='income').forEach(t=>incs[t.category]=(incs[t.category]||0)+Number(t.amount||0));const incArr=Object.entries(incs).sort((a,b)=>b[1]-a[1]);document.getElementById('incomeTotalLabel').textContent=fmt(current.inc);document.getElementById('reportIncomeSources').innerHTML=incArr.length?incArr.map(([k,v])=>`<div class="statement"><div class="row"><span>${k}</span><b>${fmt(v)}</b></div></div>`).join(''):'<div class="empty">No income data for this month.</div>';
  const big=current.tx.filter(t=>t.type==='expense').sort((a,b)=>b.amount-a.amount).slice(0,8);document.getElementById('biggestExpenses').innerHTML=big.length?big.map(t=>`<div class="statement"><div class="row"><span><b>${t.merchant}</b><div class="muted">${t.date} · ${t.category}</div></span><b>${fmt(t.amount)}</b></div></div>`).join(''):'<div class="empty">No expenses.</div>';
  const rec=current.tx.filter(t=>t.recurring);document.getElementById('recurringReport').innerHTML=rec.length?rec.map(t=>`<div class="statement"><div class="row"><span>${t.category}<div class="muted">${t.merchant}</div></span><b>${fmt(t.amount)}</b></div></div>`).join(''):'<div class="empty">No recurring expenses detected in this month.</div>';
- document.getElementById('reportStatements').textContent=(data.statements||[]).filter(s=>s.month===reportMonth).length;document.getElementById('reportReview').textContent=current.tx.filter(t=>t.review).length;document.getElementById('transfersExcluded').textContent=current.tx.filter(t=>t.type==='transfer').length;document.getElementById('cardSpend').textContent=fmt(current.tx.filter(t=>t.source==='Credit Card'&&t.type==='expense').reduce((a,t)=>a+t.amount,0));
+ const reviewItems=current.tx.filter(t=>t.review); document.getElementById('reportReviewPill').textContent=numbersHidden?'••••':reviewItems.length; document.getElementById('reportReviewList').innerHTML=reviewItems.length?reviewItems.map(t=>{const i=data.tx.indexOf(t);return `<div class="tx" onclick="openReview(${i})" style="cursor:pointer"><div class="row"><span><span class="merchant">${t.merchant}</span><small>${t.date} · ${t.source} · ${fmt(t.amount)}</small></span><span class="badge review">Review →</span></div></div>`}).join(''):'<div class="empty">Nothing needs review.</div>'; document.getElementById('reportStatements').textContent=(data.statements||[]).filter(s=>s.month===reportMonth).length;document.getElementById('transfersExcluded').textContent=current.tx.filter(t=>t.type==='transfer').length;document.getElementById('cardSpend').textContent=fmt(current.tx.filter(t=>t.source==='Credit Card'&&t.type==='expense').reduce((a,t)=>a+t.amount,0));
 }
 
 
@@ -195,10 +195,17 @@ function cleanNum(s){return Number(String(s).replace(/,/g,''))}
 function normalizeDate(s, fallbackMonth){
  s=String(s||'').trim(); let m;
  if((m=s.match(/(20\d{2})[\/\-](\d{1,2})[\/\-](\d{1,2})/))) return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+ if((m=s.match(/(20\d{2})\s*[\/\-]\s*(\d{1,2})\s*[\/\-]\s*(\d{1,2})/))) return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
  if((m=s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](20\d{2})/))) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
- if((m=s.match(/(\d{4})(\d{2})(\d{2})/))) return `${m[1]}-${m[2]}-${m[3]}`;
+ if((m=s.match(/(\d{1,2})\s*[\/\-]\s*(\d{1,2})\s*[\/\-]\s*(20\d{2})/))) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+ if((m=s.match(/(20\d{2})(\d{2})(\d{2})/))) return `${m[1]}-${m[2]}-${m[3]}`;
+ if((m=s.match(/(\d{1,2})\s+(\d{1,2})\s+(20\d{2})/))) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
  return '';
 }
+function extractDateTokens(text){
+ const out=[];const re=/(20\d{2}[\/\-]\d{1,2}[\/\-]\d{1,2}|\d{1,2}[\/\-]\d{1,2}[\/\-]20\d{2}|20\d{6})/g;let m;while((m=re.exec(String(text||'')))){const d=normalizeDate(m[1],'');if(d&&!out.includes(d))out.push(d)}return out;
+}
+
 function categoryForMerchant(m){const x=String(m||'').toUpperCase();
  if(/EDUCAT|SCHOOL|UNIVERSIT|ACADEMY|AL[- ]FERAS|مدرس|تعليم/.test(x))return 'Education';
  if(/STC|MOBILY|ZAIN|INTERNET|ELECTRIC|SEC|WATER|BILL|SADAD|فاتورة/.test(x))return 'Bills';
@@ -237,41 +244,103 @@ function parseTransactionsFromText(text,month,source){
    const c=classifyParsed(desc,amount,raw,forcedType); if(!c)return;
    const key=[date,source,desc.toUpperCase(),amount.toFixed(2)].join('|');
    if(out.some(t=>t.key===key))return;
-   out.push({date,merchant:desc.slice(0,120),amount,type:c.type,category:c.category,source,review:c.review,key});
+   out.push({date,merchant:desc.slice(0,160),amount,type:c.type,category:c.category,source,review:c.review,key});
  };
- // Bank-statement pattern: a row contains Balance, Credit, Debit; the date is on the same row or within the next few rows.
+ // Build records around each actual transaction date. Many bank PDFs place the numeric columns first,
+ // then the transaction description, then the transaction date. We therefore search both directions.
  for(let i=0;i<lines.length;i++){
-   const line=lines[i];
-   if(!looksLikeDateLine(line))continue;
-   const date=normalizeDate((line.match(/\b20\d{2}[\/\-]\d{1,2}[\/\-]\d{1,2}\b|\b\d{1,2}[\/\-]\d{1,2}[\/\-]20\d{2}\b|\b20\d{6}\b/)||[])[0],'');
-   if(!date)continue;
+   const dateMatch=lines[i].match(/20\d{2}[\/\-]\d{1,2}[\/\-]\d{1,2}|\d{1,2}[\/\-]\d{1,2}[\/\-]20\d{2}|20\d{6}/);
+   if(!dateMatch)continue;
+   const date=normalizeDate(dateMatch[0],month); if(!date)continue;
    let amountRow=-1, vals=[];
-   for(let j=Math.max(0,i-4);j<=i;j++){const v=moneyValues(lines[j]);if(v.length>=3){amountRow=j;vals=v;break;}}
+   for(let j=Math.max(0,i-6);j<=Math.min(lines.length-1,i+2);j++){
+     const v=moneyValues(lines[j]);
+     if(v.length>=3){amountRow=j;vals=v;break;}
+   }
+   if(amountRow<0){
+     for(let j=Math.max(0,i-2);j<=Math.min(lines.length-1,i+6);j++){
+       const v=moneyValues(lines[j]);
+       if(v.length>=2){amountRow=j;vals=v;break;}
+     }
+   }
    if(amountRow>=0){
-     // Standard Arabic bank statement order is Balance, Credit, Debit.
-     const credit=vals[1]||0, debit=vals[2]||0;
-     const descLines=lines.slice(amountRow+1,i).filter(x=>!looksLikeDateLine(x)&&!moneyValues(x).length&&!/^\d{1,2}:\d{2}/.test(x));
-     let desc=descLines.join(' ').trim();
-     if(!desc) desc=lines[amountRow].replace(/(?:SAR|SR|ر\.س)?\s*[0-9,]+(?:\.\d{1,2})?/gi,' ').replace(/\s+/g,' ').trim();
+     let credit=0,debit=0;
+     if(vals.length>=3){credit=vals[1]||0;debit=vals[2]||0;}
+     else { // generic two-column row: use surrounding language to determine direction
+       const context=lines.slice(Math.max(0,Math.min(i,amountRow)-3),Math.min(lines.length,Math.max(i,amountRow)+4)).join(' ');
+       const n=vals[vals.length-1]||0;
+       if(/دائن|credit|incoming|received|وارد|إيداع|راتب|sukuk|dividend|roi/i.test(context)) credit=n; else debit=n;
+     }
+     const descParts=[];
+     for(let k=Math.min(i,amountRow)+1;k<=Math.max(i,amountRow)+6;k++){
+       const q=lines[k]; if(!q||q===lines[i]||k===amountRow||looksLikeDateLine(q)||moneyValues(q).length)continue;
+       if(/^(رصيد|balance|مدين|دائن|debit|credit|date|التاريخ|تفاصيل العملية)$/i.test(q))continue;
+       descParts.push(q);
+       if(descParts.join(' ').length>220)break;
+     }
+     if(descParts.length===0){
+       for(let k=Math.max(0,Math.min(i,amountRow)-6);k<=Math.min(lines.length-1,Math.max(i,amountRow)+2);k++){
+         const q=lines[k]; if(!q||q===lines[i]||k===amountRow||looksLikeDateLine(q)||moneyValues(q).length)continue;
+         descParts.push(q);
+       }
+     }
+     const desc=descParts.join(' ').replace(/\s+/g,' ').trim();
      if(credit>0 && debit===0)add(date,desc,credit,'income',lines[amountRow]+' '+desc);
      else if(debit>0 && credit===0)add(date,desc,debit,'expense',lines[amountRow]+' '+desc);
      else if(credit>0)add(date,desc,credit,'income',lines[amountRow]+' '+desc);
      continue;
    }
-   // Generic row: date + description + one amount. Do not use the statement month as a fake transaction date.
-   const window=lines.slice(Math.max(0,i-2),Math.min(lines.length,i+3));
-   const candidates=[]; for(const w of window){for(const n of moneyValues(w))candidates.push(n)}
-   if(candidates.length){const amount=candidates[candidates.length-1];const desc=window.filter(x=>x!==line&&!moneyValues(x).length&&!looksLikeDateLine(x)).join(' ').trim();if(desc)add(date,desc,amount,undefined,desc)}
+   // If the PDF has one amount on the same transaction line, use the local date context only.
+   const context=lines.slice(Math.max(0,i-2),Math.min(lines.length,i+3));
+   const candidates=context.flatMap(w=>moneyValues(w));
+   if(candidates.length){
+     const amount=candidates[candidates.length-1];
+     const desc=context.filter(x=>x!==lines[i]&&!moneyValues(x).length&&!looksLikeDateLine(x)).join(' ').trim();
+     if(desc)add(date,desc,amount,undefined,desc);
+   }
+ }
+ // Fallback for PDFs where the transaction date appears in a note line after the description.
+ // Search every line for a date and attach the nearest numeric debit/credit row not already captured.
+ for(let i=0;i<lines.length;i++){
+   const dm=lines[i].match(/20\d{2}[\/\-]\d{1,2}[\/\-]\d{1,2}|\d{1,2}[\/\-]\d{1,2}[\/\-]20\d{2}|20\d{6}/); if(!dm)continue;
+   const date=normalizeDate(dm[0],month); if(!date)continue;
+   const near=[]; for(let j=Math.max(0,i-8);j<=Math.min(lines.length-1,i+2);j++){const v=moneyValues(lines[j]);if(v.length>=3)near.push({j,v})}
+   if(!near.length)continue; const r=near[near.length-1]; const credit=r.v[1]||0,debit=r.v[2]||0;
+   const desc=lines.slice(Math.max(0,r.j-3),Math.min(lines.length,r.j+5)).filter((q,k)=>q&&!looksLikeDateLine(q)&&!moneyValues(q).length&&!/opening balance|closing balance|total deposits|total withdrawals|رصيد الحساب/i.test(q)).join(' ').trim();
+   if(credit>0&&debit===0)add(date,desc,credit,'income',desc);else if(debit>0&&credit===0)add(date,desc,debit,'expense',desc);
  }
  return out.map(({key,...t})=>t);
 }
+
 async function readPdfText(file){if(!window.pdfjsLib){await new Promise(r=>setTimeout(r,800))}const pdfjs=window.pdfjsLib;if(!pdfjs)throw new Error('PDF engine unavailable');pdfjs.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';const buf=await file.arrayBuffer();const pdf=await pdfjs.getDocument({data:buf}).promise;let out='';for(let pno=1;pno<=pdf.numPages;pno++){const p=await pdf.getPage(pno);const c=await p.getTextContent();const items=(c.items||[]).map(it=>({x:it.transform?it.transform[4]:0,y:it.transform?it.transform[5]:0,s:it.str||''})).sort((a,b)=>b.y-a.y||a.x-b.x);const rows=[];for(const it of items){let row=rows.find(r=>Math.abs(r.y-it.y)<=2.5);if(!row){row={y:it.y,items:[]};rows.push(row)}row.items.push(it)}rows.sort((a,b)=>b.y-a.y);for(const r of rows){r.items.sort((a,b)=>a.x-b.x);const txt=r.items.map(z=>z.s).join(' ').replace(/\s+/g,' ').trim();if(txt)out+=txt+'\n'}out+='\n'}return out}
 function detectTransactionCount(t){return parseTransactionsFromText(t,'2026-08','Imported').length}
 function classifyTransaction(merchant,amount,type,category){const a=Math.abs(Number(amount));if(a>=10000 && type!=='transfer')return {review:true};return {review:false}}
 function classifyRecurringExpense(merchant,amount){const m=String(merchant||'').toUpperCase();const a=Math.abs(Number(amount));if(m.includes('BARQ SAFE ACCOUNT')&&Math.abs(a-1800)<0.01)return {type:'expense',category:'Driver Salary',recurring:true};if(m.includes('ETAFERAHU KASSE LEGESE')&&Math.abs(a-1400)<0.01)return {type:'expense',category:'Housemaid Salary',recurring:true};if((m.includes('خصم أقساط متأخرة تمويل')||m.includes('FINANCING INSTALLMENT')||m.includes('FINANCING'))&&(Math.abs(a-6000)<0.01||Math.abs(a-5040.14)<0.01))return {type:'expense',category:'Financing / Loan',recurring:true};return null}
 
-document.getElementById('pdfInput').addEventListener('change',async e=>{const files=[...e.target.files];if(!files.length)return;const target=prompt('Which month are these statements for? Enter YYYY-MM','2026-07')||'2026-07';data.statements=data.statements||[]; data.recurringIncome=data.recurringIncome||{salary:30715,extra:857.23,bsf:1983.75};
-if((data.tx||[]).length===0 && (data.statements||[]).length){ data.statements=[]; saveSafeCleanup(); }
-function saveSafeCleanup(){ try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){} }document.getElementById('importResults').innerHTML='<div class="review">Reading and extracting transactions locally…</div>';for(const f of files){let result={name:f.name,month:target,status:'Imported',transactions:0};try{const text=await readPdfText(f);const source=/card|credit/i.test(f.name)?'Credit Card':(/bsf|french|saudi.*fransi|fransi/i.test(f.name)?'Bank 2':'Bank 1');const statementKey=[source,target,f.name].join('|');data.tx=(data.tx||[]).filter(x=>x.statementKey!==statementKey);const parsed=parseTransactionsFromText(text,target,source);result.transactions=parsed.length;result.status=parsed.length?'Extracted locally':'Read, but no transactions detected';for(const t of parsed){t.statementKey=statementKey;const dup=data.tx.some(x=>x.date===t.date&&x.source===t.source&&Math.abs(Number(x.amount)-Number(t.amount))<0.01&&String(x.merchant).toUpperCase()===String(t.merchant).toUpperCase());if(!dup)data.tx.push(t)}data.statements=(data.statements||[]).filter(s=>s.statementKey!==statementKey);result.statementKey=statementKey;data.statements.push(result);document.getElementById('importResults').innerHTML+=`<div class="statement"><div class="row"><b>${f.name}</b><span class="status">${result.status}</span></div><div class="muted">${monthLabel(target)} · ${parsed.length} transactions extracted · duplicates skipped · processed on this device.</div></div>`}catch(err){result.status='Could not extract automatically';data.statements.push(result);document.getElementById('importResults').innerHTML+=`<div class="review">${f.name}: ${result.status}. ${err.message||''}</div>`}}save();reportMonth=target;localStorage.setItem('naif-report-month',target);refreshMonthSelector();render();});
+document.getElementById('pdfInput').addEventListener('change',async e=>{
+ const files=[...e.target.files]; if(!files.length)return;
+ data.statements=data.statements||[]; data.recurringIncome=data.recurringIncome||{salary:30715,extra:857.23,bsf:1983.75};
+ document.getElementById('importResults').innerHTML='<div class="review">Reading the full statement locally… dates and months will be detected automatically.</div>';
+ for(const f of files){
+   let result={name:f.name,status:'Imported',transactions:0};
+   try{
+     const text=await readPdfText(f);
+     const source=/card|credit/i.test(f.name)?'Credit Card':(/bsf|french|saudi.*fransi|fransi/i.test(f.name)?'Bank 2':'Bank 1');
+     const statementKey=[source,f.name].join('|');
+     data.tx=(data.tx||[]).filter(x=>x.statementKey!==statementKey);
+     data.statements=(data.statements||[]).filter(s=>s.statementKey!==statementKey);
+     const parsed=parseTransactionsFromText(text,'',source);
+     result.transactions=parsed.length;
+     result.status=parsed.length?'Extracted locally':'Read, but no transactions detected';
+     const months=[...new Set(parsed.map(t=>monthKey(t.date)).filter(Boolean))].sort();
+     result.months=months;
+     for(const t of parsed){t.statementKey=statementKey;const dup=data.tx.some(x=>x.date===t.date&&x.source===t.source&&Math.abs(Number(x.amount)-Number(t.amount))<0.01&&String(x.merchant).toUpperCase()===String(t.merchant).toUpperCase());if(!dup)data.tx.push(t)}
+     data.statements.push({...result,month:months[0]||'',statementKey,period:months.length>1?`${months[0]} to ${months[months.length-1]}`:(months[0]||'')});
+     document.getElementById('importResults').innerHTML+=`<div class="statement"><div class="row"><b>${f.name}</b><span class="status">${result.status}</span></div><div class="muted">${months.length>1?months.map(monthLabel).join(' · '):monthLabel(months[0]||'')} · ${parsed.length} transactions · months detected automatically.</div></div>`;
+   }catch(err){result.status='Could not extract automatically';data.statements.push({...result,statementKey:[source,f.name].join('|')});document.getElementById('importResults').innerHTML+=`<div class="review">${f.name}: ${result.status}. ${err.message||''}</div>`}
+ }
+ if(save()){const months=availableMonths().filter(m=>m!==DEFAULT_MONTH);reportMonth=months[months.length-1]||DEFAULT_MONTH;localStorage.setItem('naif-report-month',reportMonth);refreshMonthSelector();render();}
+ e.target.value='';
+});
 render();
 </script></body></html>
