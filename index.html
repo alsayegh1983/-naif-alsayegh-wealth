@@ -13,6 +13,7 @@ header{padding:52px 18px 15px}.profile{display:flex;align-items:center;gap:12px}
 .seg{display:flex;background:#12191b;border:1px solid #232d30;padding:3px;border-radius:11px;margin:11px 0}.seg button{flex:1;border:0;background:transparent;color:#778183;padding:8px;border-radius:8px}.seg button.on{background:#eef1f2;color:#101516;font-weight:700}.bar{height:8px;background:#20292b;border-radius:99px;overflow:hidden;margin-top:8px}.fill{height:100%;background:var(--blue);border-radius:99px}
 .tabs{position:fixed;bottom:0;left:0;right:0;height:82px;background:rgba(9,13,14,.95);backdrop-filter:blur(20px);border-top:1px solid #20292b;display:flex;justify-content:center;z-index:10}.tabs button{flex:1;max-width:104px;border:0;background:none;color:#7d888a;font-size:10px}.tabs button.active{color:#5d8cff;font-weight:700}.icon{display:block;font-size:20px;margin-bottom:3px}
 button{font:inherit}.primary,.secondary{border-radius:13px;padding:12px 14px;border:0}.primary{background:#167cff;color:white;font-weight:700}.secondary{background:#11191b;color:white;border:1px solid #293437}.full{width:100%}input,select{width:100%;background:#0d1416;color:white;border:1px solid #293437;border-radius:12px;padding:12px;margin:6px 0 12px;font-size:16px}label{font-size:12px;color:var(--muted)}.upload{border:1px dashed #3b4a4d;border-radius:17px;padding:22px;text-align:center;background:#0c1315}.upload input{display:none}.pill{display:inline-flex;align-items:center;gap:6px;background:#16251f;color:#7ee4b4;border:1px solid #214a39;border-radius:99px;padding:6px 9px;font-size:11px}.statement{padding:13px 0;border-bottom:1px solid var(--line)}.statement:last-child{border-bottom:0}.status{font-size:11px;color:var(--green)}.review{background:#211d11;border:1px solid #554822;color:#e5cb7b;border-radius:13px;padding:12px;margin-top:10px;font-size:12px}.tx{padding:12px 0;border-bottom:1px solid var(--line)}.tx:last-child{border-bottom:0}.tx .merchant{font-weight:650}.tx small{display:block;color:var(--muted);margin-top:3px}.badge{font-size:10px;border-radius:99px;padding:4px 7px;background:#172126;color:#a8b7bb}.badge.transfer{background:#171d27;color:#8fb3ff}.badge.review{background:#2b2410;color:#e8ce78}.badge.card{background:#241822;color:#e59bb3}.empty{color:var(--muted);padding:20px 0;text-align:center}.modal{position:fixed;inset:0;background:#0009;display:none;align-items:flex-end;z-index:20}.sheet{width:100%;max-width:520px;margin:auto;background:#101719;border:1px solid #263235;border-radius:24px 24px 0 0;padding:20px;max-height:88vh;overflow:auto}.sheet h2{margin:0 0 12px}.chart{height:150px;width:100%}.smallbtn{padding:8px 10px;font-size:12px}.source{font-size:10px;color:#697477;margin-top:6px}
+.danger{border:0;border-radius:12px;padding:10px 14px;background:#b42318;color:#fff;font-weight:700}
 </style>
 </head>
 <body><div class="app">
@@ -44,7 +45,8 @@ button{font:inherit}.primary,.secondary{border-radius:13px;padding:12px 14px;bor
 <div class="card"><div class="row"><span class="title">Data quality</span><span class="muted">Selected month</span></div><div class="grid" style="margin-top:12px"><div class="metric"><span>Statements</span><b id="reportStatements">0</b></div><div class="metric"><span>Needs review</span><b id="reportReview">0</b></div><div class="metric"><span>Transfers excluded</span><b id="transfersExcluded">0</b></div><div class="metric"><span>Card spend</span><b id="cardSpend">SAR 0</b></div></div></div>
 </section>
 </main>
-<nav class="tabs"><button class="active" onclick="tab('dashboard',this)"><span class="icon">⌂</span>Dashboard</button><button onclick="tab('transactions',this)"><span class="icon">↘</span>Transactions</button><button onclick="tab('import',this)"><span class="icon">⇧</span>Statements</button><button onclick="tab('reports',this)"><span class="icon">▥</span>Reports</button></nav>
+<section id="settings" class="list"><div class="card"><div class="title">Settings</div><p class="muted">Manage the data stored locally on this iPhone.</p><div class="statement" style="margin-top:12px"><div class="row"><span><b>Reset all financial data</b><div class="muted">Deletes all imported statements, transactions, reviews and reports from this device. Your app and GitHub files are not deleted.</div></span><button class="danger" onclick="resetAllData()">Reset Data</button></div></div></div></section>
+<nav class="tabs"><button class="active" onclick="tab('dashboard',this)"><span class="icon">⌂</span>Dashboard</button><button onclick="tab('transactions',this)"><span class="icon">↘</span>Transactions</button><button onclick="tab('import',this)"><span class="icon">⇧</span>Statements</button><button onclick="tab('reports',this)"><span class="icon">▥</span>Reports</button><button onclick="tab('settings',this)"><span class="icon">⚙</span>Settings</button></nav>
 </div>
 <div class="modal" id="modal"><div class="sheet"><h2 id="modalTitle">Statement Review</h2><div id="modalBody"></div><button class="primary full" onclick="closeModal()">Done</button></div></div>
 <script type="module">import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs"; window.pdfjsLib=pdfjsLib;</script>
@@ -118,7 +120,11 @@ const sample={assets:{Cash:0,'Saudi Stocks':0,Crypto:0,Gold:0,Property:0,Other:0
 {date:'2026-09-30',merchant:'JAH ARABIAN INTERNATIONAL',amount:122,type:'expense',category:'Travel',source:'Credit Card'},
 {date:'2026-09-30',merchant:'NUSKHAT LILTIMAM',amount:80,type:'expense',category:'Shopping',source:'Credit Card'}
 ]};
-let data=JSON.parse(localStorage.getItem(KEY)||'null')||sample;data.statements=data.statements||[];
+let data=JSON.parse(localStorage.getItem(KEY)||'null');
+if(!data){data=sample;}
+data.statements=data.statements||[];
+function resetAllData(){if(!confirm('Delete ALL stored Wealth data on this iPhone? This cannot be undone.'))return; data={assets:{Cash:0,'Saudi Stocks':0,Crypto:0,Gold:0,Property:0,Other:0},debts:{Loans:0,'Credit Cards':0},tx:[],statements:[]}; localStorage.setItem(KEY,JSON.stringify(data)); localStorage.setItem('naif-wealth-initialized','1'); location.reload();}
+
 function save(){localStorage.setItem(KEY,JSON.stringify(data))}
 function applyReviewRules(){data.tx.forEach(t=>{if(Math.abs(Number(t.amount))>=10000 && !['transfer'].includes(t.type) && !t.review){t.review=true}})}
 applyReviewRules();save();
@@ -166,10 +172,73 @@ function renderReports(){
 }
 
 
-document.getElementById('pdfInput').addEventListener('change',async e=>{const files=[...e.target.files];if(!files.length)return;const target=prompt('Which month are these statements for? Enter YYYY-MM','2026-08')||'2026-08';data.statements=data.statements||[];document.getElementById('importResults').innerHTML='<div class="review">Reading '+files.length+' statement(s) locally…</div>';for(const f of files){const result={name:f.name,month:target,status:'Imported for review',transactions:0};try{const text=await readPdfText(f);result.transactions=detectTransactionCount(text);result.status='Read locally · review required';}catch(err){result.status='Could not read automatically';}data.statements.push(result);document.getElementById('importResults').innerHTML+=`<div class="statement"><div class="row"><b>${f.name}</b><span class="status">${result.status}</span></div><div class="muted">${monthLabel(target)} · Detected ${result.transactions} transaction-like rows. No file upload is performed.</div></div>`}save();reportMonth=target;localStorage.setItem('naif-report-month',target);refreshMonthSelector();render();});
-async function readPdfText(file){if(!window.pdfjsLib){await new Promise(r=>setTimeout(r,800))}const pdfjs=window.pdfjsLib;if(!pdfjs)throw new Error('PDF engine unavailable');pdfjs.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';const buf=await file.arrayBuffer();const pdf=await pdfjs.getDocument({data:buf}).promise;let out='';for(let i=1;i<=pdf.numPages;i++){const p=await pdf.getPage(i);const c=await p.getTextContent();out+=c.items.map(x=>x.str).join(' ')+'\n'}return out}
-function detectTransactionCount(t){return (t.match(/\b\d{1,3}(?:,\d{3})*\.\d{2}\b/g)||[]).length}
+function cleanNum(s){return Number(String(s).replace(/,/g,''))}
+function normalizeDate(s, fallbackMonth){
+  s=String(s||'').trim(); let m;
+  if((m=s.match(/(20\d{2})[\/\-](\d{1,2})[\/\-](\d{1,2})/))) return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  if((m=s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](20\d{2})/))) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  if((m=s.match(/(\d{1,2})[\/\-](\d{1,2})/))){const y=String(fallbackMonth||'2026-01').slice(0,4), mo=String(fallbackMonth||'2026-01').slice(5,7); return `${y}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;}
+  return fallbackMonth+'-01';
+}
+function categoryForMerchant(m){const x=String(m||'').toUpperCase();
+ if(/EDUCAT|SCHOOL|UNIVERSIT|ACADEMY|AL[- ]FERAS/.test(x))return 'Education';
+ if(/STC|MOBILY|ZAIN|INTERNET|ELECTRIC|SEC|WATER|BILL|SADAD/.test(x))return 'Bills';
+ if(/CARREFOUR|DANUBE|PANDA|NOON|AMAZON|SHOP|STORE|MALL|IKEA/.test(x))return 'Shopping';
+ if(/HUNGER|HERFY|FOOD|RESTAUR|COFFEE|CAFE|STARBUCK|MCDONALD|KFC|ALBAIK/.test(x))return 'Food';
+ if(/NAFT|PETROL|FUEL|GAS/.test(x))return 'Transport';
+ if(/UBER|CAREEM|TAXI/.test(x))return 'Transport';
+ if(/PHARM|HOSPITAL|CLINIC|NMC|MEDICAL/.test(x))return 'Health';
+ if(/TRAVEL|HOTEL|AIRLINE|FLY|BOOKING|ADVENTURE|BALI/.test(x))return 'Travel';
+ if(/SALON|SHAV|BEAUTY|TAILOR/.test(x))return 'Personal Care';
+ return 'Other';
+}
+function classifyParsed(desc,amount,raw){const x=(String(desc)+' '+String(raw||'')).toUpperCase(), a=Math.abs(amount);
+ if(/CREDIT CARD PAYMENT|CARD PAYMENT|سداد بطاقة|سداد.*بطاقة|PAYMENT.*CARD/.test(x))return {type:'transfer',category:'Credit Card Payment',review:false};
+ if(/INVESTMENT ACCOUNT.*BANK|INVESTMENT.*BANK|حساب استثمار.*حساب|من.*الاستثمار.*الى/.test(x))return {type:'transfer',category:'Investment Account Transfer',review:false};
+ if(/BANK.*INVESTMENT|INVESTMENT ACCOUNT|تحويل.*استثمار|الى.*الاستثمار/.test(x))return {type:'transfer',category:'Investment Transfer',review:false};
+ if(/OWN ACCOUNT|INTERNAL TRANSFER|حوالة داخلية|تحويل داخلي|بين حسابات/.test(x))return {type:'transfer',category:'Internal Transfer',review:false};
+ if(/ATM|CASH WITHDRAW|سحب نقد/.test(x))return {type:'transfer',category:'Cash Withdrawal',review:true};
+ const recurring=classifyRecurringExpense(desc,a); if(recurring)return {...recurring,review:false};
+ const incoming=/CREDIT|CR\b|INCOMING|RECEIVED|SALARY|SUKUK|DIVIDEND|ROI|TRANSFER IN|حوالة.*واردة|وارد|إيداع|راتب|أرباح|صكوك/.test(x);
+ const expense=/POS|PURCHASE|APPLE PAY|SADAD|DEBIT|DR\b|WITHDRAW|شراء|مدين|رسوم|FEE/.test(x);
+ if(incoming && !expense){let cat=/SUKUK|ROI|DIVIDEND|أرباح|صكوك/.test(x)?'Investment Income':/SALARY|راتب/.test(x)?'Salary':/GULFMAS|BUSINESS|تجاري/.test(x)?'Business Income':'Income'; return {type:'income',category:cat,review:a>=10000};}
+ if(expense || a>0){return {type:'expense',category:categoryForMerchant(desc),review:a>=10000};}
+ return {type:'expense',category:'Other',review:a>=10000};
+}
+function parseTransactionsFromText(text,month,source){
+ const lines=String(text||'').split(/\n+/).map(x=>x.replace(/\s+/g,' ').trim()).filter(Boolean); const out=[];
+ for(let i=0;i<lines.length;i++){
+   const line=lines[i];
+   if(/statement|opening balance|closing balance|total (deposits|withdrawals|payments|spend)|account number|iban|page \d|date.*description/i.test(line)) continue;
+   const dateMatch=line.match(/\b20\d{2}[\/\-]\d{1,2}[\/\-]\d{1,2}\b|\b\d{1,2}[\/\-]\d{1,2}[\/\-]20\d{2}\b/);
+   const money=[...line.matchAll(/(?:SAR|SR|ر\.س)?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.\d{1,2})|[0-9]+\.\d{1,2})(?!\d)/g)].map(m=>cleanNum(m[1]));
+   if(!money.length) continue;
+   const date=normalizeDate(dateMatch?dateMatch[0]:null,month);
+   let desc=line.replace(dateMatch?dateMatch[0]:'','').trim();
+   // Remove obvious standalone balance/serial numbers and keep the descriptive text.
+   desc=desc.replace(/\b(?:SAR|SR|ر\.س)\s*[0-9,]+(?:\.\d{1,2})?\b/gi,'').replace(/\s{2,}/g,' ').trim();
+   if(desc.length<3) continue;
+   let amount=money[money.length-1];
+   // Skip lines whose last amount is clearly a balance/summary and not a transaction.
+   if(/balance|رصيد|total|إجمالي|opening|closing/i.test(desc)) continue;
+   const c=classifyParsed(desc,amount,line);
+   if(!c) continue;
+   const key=[date,source,desc.toUpperCase(),amount.toFixed(2)].join('|');
+   if(out.some(t=>t.key===key))continue;
+   out.push({date,merchant:desc.slice(0,90),amount,type:c.type,category:c.category,source,review:c.review,key});
+ }
+ // If the PDF text layout puts date/description/amount on adjacent lines, stitch simple triples.
+ for(let i=0;i<lines.length-2;i++){
+   const d=lines[i].match(/\b20\d{2}[\/\-]\d{1,2}[\/\-]\d{1,2}\b|\b\d{1,2}[\/\-]\d{1,2}[\/\-]20\d{2}\b/); const nums=lines[i+2].match(/(?:SAR|SR|ر\.س)?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.\d{1,2})|[0-9]+\.\d{1,2})/i);
+   if(d && nums && lines[i+1].length>2){const desc=lines[i+1];const amount=cleanNum(nums[1]);const date=normalizeDate(d[0],month);const c=classifyParsed(desc,amount,desc);const key=[date,source,desc.toUpperCase(),amount.toFixed(2)].join('|');if(!out.some(t=>t.key===key))out.push({date,merchant:desc.slice(0,90),amount,type:c.type,category:c.category,source,review:c.review,key});}
+ }
+ return out.map(({key,...t})=>t);
+}
+async function readPdfText(file){if(!window.pdfjsLib){await new Promise(r=>setTimeout(r,800))}const pdfjs=window.pdfjsLib;if(!pdfjs)throw new Error('PDF engine unavailable');pdfjs.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';const buf=await file.arrayBuffer();const pdf=await pdfjs.getDocument({data:buf}).promise;let out='';for(let i=1;i<=pdf.numPages;i++){const p=await pdf.getPage(i);const c=await p.getTextContent();const items=c.items||[];let lastY=null,row='';for(const item of items){const y=item.transform?Math.round(item.transform[5]):null;if(lastY!==null && y!==lastY){out+=row.trim()+'\n';row='';}row+=(row?' ':'')+item.str;lastY=y;}if(row)out+=row.trim()+'\n';}return out}
+function detectTransactionCount(t){return parseTransactionsFromText(t,'2026-08','Imported').length}
 function classifyTransaction(merchant,amount,type,category){const a=Math.abs(Number(amount));if(a>=10000 && type!=='transfer')return {review:true};return {review:false}}
 function classifyRecurringExpense(merchant,amount){const m=String(merchant||'').toUpperCase();const a=Math.abs(Number(amount));if(m.includes('BARQ SAFE ACCOUNT')&&Math.abs(a-1800)<0.01)return {type:'expense',category:'Driver Salary',recurring:true};if(m.includes('ETAFERAHU KASSE LEGESE')&&Math.abs(a-1400)<0.01)return {type:'expense',category:'Housemaid Salary',recurring:true};if((m.includes('خصم أقساط متأخرة تمويل')||m.includes('FINANCING INSTALLMENT')||m.includes('FINANCING'))&&(Math.abs(a-6000)<0.01||Math.abs(a-5040.14)<0.01))return {type:'expense',category:'Financing / Loan',recurring:true};return null}
+
+document.getElementById('pdfInput').addEventListener('change',async e=>{const files=[...e.target.files];if(!files.length)return;const target=prompt('Which month are these statements for? Enter YYYY-MM','2026-07')||'2026-07';data.statements=data.statements||[];document.getElementById('importResults').innerHTML='<div class="review">Reading and extracting transactions locally…</div>';for(const f of files){let result={name:f.name,month:target,status:'Imported',transactions:0};try{const text=await readPdfText(f);const source=/card|credit/i.test(f.name)?'Credit Card':(/rajhi|alrajhi/i.test(f.name)?'Bank 1':'Bank 1');const parsed=parseTransactionsFromText(text,target,source);result.transactions=parsed.length;result.status=parsed.length?'Extracted locally':'Read, but no transactions detected';for(const t of parsed){const dup=data.tx.some(x=>x.date===t.date&&x.source===t.source&&Math.abs(Number(x.amount)-Number(t.amount))<0.01&&String(x.merchant).toUpperCase()===String(t.merchant).toUpperCase());if(!dup)data.tx.push(t)}data.statements.push(result);document.getElementById('importResults').innerHTML+=`<div class="statement"><div class="row"><b>${f.name}</b><span class="status">${result.status}</span></div><div class="muted">${monthLabel(target)} · ${parsed.length} transactions extracted · duplicates skipped · processed on this device.</div></div>`}catch(err){result.status='Could not extract automatically';data.statements.push(result);document.getElementById('importResults').innerHTML+=`<div class="review">${f.name}: ${result.status}. ${err.message||''}</div>`}}save();reportMonth=target;localStorage.setItem('naif-report-month',target);refreshMonthSelector();render();});
 render();
 </script></body></html>
