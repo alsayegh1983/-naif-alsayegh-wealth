@@ -13,7 +13,7 @@
 <div class="toast" id="toast"></div><div class="modal" id="modal"><div class="sheet"><h2 id="modalTitle">Review</h2><div id="modalBody"></div><button class="primary full" data-action="closeModal">Done</button></div></div>
 <script>
 (function(){'use strict';
-const KEY='naif-wealth-v24'; const NW='naif-wealth-v24-nw'; const INCOME='naif-wealth-v24-income'; const DEFAULT='2026-09';
+const KEY='naif-wealth-v26'; const NW='naif-wealth-v24-nw'; const INCOME='naif-wealth-v24-income'; const DEFAULT='2026-09';
 const empty=()=>({assets:{Cash:0,'Saudi Stocks':0,Crypto:0,Gold:0,Property:0,Other:0},debts:{Loans:0,'Credit Cards':0},income:{salary:30715,extra:857.23,bsf:1983.75},tx:[],statements:[]});
 let data; try{data=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){data=null} if(!data)data=empty(); data.assets=data.assets||empty().assets;data.debts=data.debts||empty().debts;data.income=data.income||empty().income;data.tx=Array.isArray(data.tx)?data.tx:[];data.statements=Array.isArray(data.statements)?data.statements:[];
 try{const nw=JSON.parse(localStorage.getItem(NW)||'null');if(nw){data.assets=nw.assets||data.assets;data.debts=nw.debts||data.debts}}catch(e){} try{const inc=JSON.parse(localStorage.getItem(INCOME)||'null');if(inc)data.income=inc}catch(e){}
@@ -21,86 +21,61 @@ let hidden=localStorage.getItem('naif-hide')==='1', dashPeriod='monthly', report
 function save(){localStorage.setItem(KEY,JSON.stringify(data));return true} function money(n){return hidden?'SAR ••••••':'SAR '+Number(n||0).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2})} function pct(n){return hidden?'••••':Math.round(n||0)+'%'} function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)} function monthKey(d){const m=String(d||'').match(/(20\d{2})[-\/]?(\d{2})[-\/]?(\d{2})/);return m?m[1]+'-'+m[2]:''} function monthLabel(m){if(!m)return '';const [y,mo]=m.split('-');return new Date(Number(y),Number(mo)-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'})} function latestMonth(){const ms=data?.tx?.map(t=>monthKey(t.date)).filter(Boolean)||[];return (ms.sort().pop())||DEFAULT} function months(){const s=new Set(data.tx.map(t=>monthKey(t.date)).filter(Boolean));data.statements.forEach(x=>{if(x.month)s.add(x.month);(x.months||[]).forEach(m=>s.add(m))});if(!s.size)s.add(DEFAULT);return [...s].sort()} function txFor(m){return data.tx.filter(t=>monthKey(t.date)===m)} function periodTx(mode,m){if(mode==='monthly')return txFor(m);const [y,mo]=m.split('-').map(Number);let start=mode==='quarterly'?Math.floor((mo-1)/3)*3+1:1;let end=mode==='quarterly'?start+2:12;return data.tx.filter(t=>{const k=monthKey(t.date);if(!k)return false;const [yy,mm]=k.split('-').map(Number);return yy===y&&mm>=start&&mm<=end})} function stats(tx){const inc=tx.filter(t=>t.type==='income').reduce((a,t)=>a+Number(t.amount||0),0);const exp=tx.filter(t=>t.type==='expense').reduce((a,t)=>a+Number(t.amount||0),0);return{tx,inc,exp,saved:inc-exp,rate:inc?((inc-exp)/inc*100):0}} function recurringFor(mode){const r=data.income;const base=Number(r.salary||0)+Number(r.extra||0)+Number(r.bsf||0);return base*(mode==='quarterly'?3:mode==='yearly'?12:1)} function displayStats(mode,m){const s=stats(periodTx(mode,m));if(s.inc===0)s.inc=recurringFor(mode);s.saved=s.inc-s.exp;s.rate=s.inc?s.saved/s.inc*100:0;return s}
 function render(){renderHeader();renderDashboard();renderSettings();renderTransactions();renderStatements();renderReports()} function renderHeader(){document.getElementById('privacyBtn').textContent=hidden?'◉ Show':'◉ Hide';document.getElementById('period').textContent=monthLabel(reportMonth);document.getElementById('periodPill').textContent=monthLabel(reportMonth)} function renderDashboard(){const s=displayStats(dashPeriod,reportMonth),at=Object.values(data.assets).reduce((a,b)=>a+Number(b||0),0),dt=Object.values(data.debts).reduce((a,b)=>a+Number(b||0),0),nw=at-dt;[['networth',money(nw)],['income',money(s.inc)],['spending',money(s.exp)],['saved',money(s.saved)],['rate',pct(s.rate)],['cfIncome',money(s.inc)],['cfSpend',money(s.exp)],['cfSaved',money(s.saved)],['assetsTotal',money(at)],['liabTotal',money(dt)],['dashNW',money(nw)]].forEach(([id,v])=>document.getElementById(id).textContent=v);document.getElementById('cashPeriod').textContent=dashPeriod==='monthly'?monthLabel(reportMonth):dashPeriod==='quarterly'?'Quarterly '+reportMonth.slice(0,4):'Year '+reportMonth.slice(0,4);document.getElementById('cfIncomeBar').style.width='100%';document.getElementById('cfSpendBar').style.width=(s.inc?Math.min(100,s.exp/s.inc*100):0)+'%';document.getElementById('cfSavedBar').style.width=(s.inc?Math.max(0,Math.min(100,s.saved/s.inc*100)):0)+'%';const cats={};s.tx.filter(t=>t.type==='expense').forEach(t=>cats[t.category||'Other']=(cats[t.category||'Other']||0)+Number(t.amount||0));const top=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,5);document.getElementById('topCats').innerHTML=top.length?top.map(([k,v])=>`<div style="margin-top:12px"><div class="row"><span>${k}</span><span>${money(v)}</span></div><div class="bar"><div class="fill" style="width:${s.exp?Math.min(100,v/s.exp*100):0}%"></div></div></div>`).join(''):'<div class="no-data">No spending recorded for this period.</div>';document.querySelectorAll('#dashSeg button').forEach(b=>b.classList.toggle('active',b.dataset.period===dashPeriod))}
 function renderSettings(){const r=data.income;['salary','extra','bsf'].forEach(k=>document.getElementById(k).value=Number(r[k]||0));const a=data.assets,d=data.debts;const fields=[['Cash','a'],['Saudi Stocks','a'],['Crypto','a'],['Gold','a'],['Property','a'],['Other','a'],['Loans','d'],['Credit Cards','d']];document.getElementById('nwEditor').innerHTML=fields.map(([k,t])=>`<div class="row"><span>${k}</span><input data-nw="${k}" type="number" inputmode="decimal" value="${Number((t==='a'?a:d)[k]||0)}" style="width:150px"></div>`).join('')}
-function renderTransactions(){let arr=[...data.tx].reverse();if(txFilter!=='all')arr=arr.filter(t=>t.type===txFilter);document.getElementById('txList').innerHTML=arr.length?arr.map(t=>{const i=data.tx.indexOf(t);const badge=t.review?'Review →':t.type==='transfer'?'Excluded':t.type==='investment'?'Investment':(t.category||'Other');return `<div class="tx" ${t.review?'data-review="'+i+'"':''}><div class="row"><span><b>${t.merchant||'Transaction'}</b><small class="muted" style="display:block;margin-top:4px">${t.date||''} · ${t.source||''}</small></span><span style="text-align:right"><b class="${t.type==='expense'?'negative':t.type==='income'?'positive':''}">${t.type==='expense'?'-':t.type==='income'?'+':''}${money(t.amount)}</b><small class="badge ${t.review?'review':t.type==='transfer'?'transfer':''}">${badge}</small></span></div></div>`}).join(''):'<div class="empty">No transactions.</div>';document.querySelectorAll('#txSeg button').forEach(b=>b.classList.toggle('active',b.dataset.filter===txFilter))}
+function renderTransactions(){let arr=[...data.tx].reverse();if(txFilter!=='all')arr=arr.filter(t=>t.type===txFilter);document.getElementById('txList').innerHTML=arr.length?arr.map(t=>{const i=data.tx.indexOf(t);return `<div class="tx" ${t.review?'data-review="'+i+'"':''}><div class="row"><span><b>${t.merchant||'Transaction'}</b><small class="muted" style="display:block;margin-top:4px">${t.date||''} · ${t.source||''}</small></span><span style="text-align:right"><b class="${t.type==='expense'?'negative':t.type==='income'?'positive':''}">${t.type==='expense'?'-':t.type==='income'?'+':''}${money(t.amount).replace('SAR ','SAR ')}</b><small class="badge ${t.review?'review':t.type==='transfer'?'transfer':''}">${t.review?'Review →':t.type==='transfer'?'Excluded':(t.category||'Other')}</small></span></div></div>`}).join(''):'<div class="empty">No transactions.</div>';document.querySelectorAll('#txSeg button').forEach(b=>b.classList.toggle('active',b.dataset.filter===txFilter))}
 function renderStatements(){document.getElementById('statementCount').textContent=data.statements.length;document.getElementById('statementList').innerHTML=data.statements.length?data.statements.slice().reverse().map(s=>`<div class="statement"><div class="row"><b>${s.name||'Statement'}</b><span class="status">Imported</span></div><div class="muted">${s.period||s.month||'Multiple months'} · ${s.transactions||0} transactions</div></div>`).join(''):'<div class="empty">No statements yet.</div>'}
 function renderReports(){const s=displayStats(reportPeriod,reportMonth);['rIncome','rExpense','rSaved'].forEach((id,i)=>document.getElementById(id).textContent=money([s.inc,s.exp,s.saved][i]));document.getElementById('rRate').textContent=pct(s.rate);document.getElementById('reportPeriodLabel').textContent=reportPeriod==='monthly'?monthLabel(reportMonth):reportPeriod==='quarterly'?'Q'+(Math.floor((Number(reportMonth.slice(5))-1)/3)+1)+' '+reportMonth.slice(0,4):reportMonth.slice(0,4);document.getElementById('reportMonth').innerHTML=months().map(m=>`<option value="${m}" ${m===reportMonth?'selected':''}>${monthLabel(m)}</option>`).join('');document.querySelectorAll('#reportSeg button').forEach(b=>b.classList.toggle('active',b.dataset.reportPeriod===reportPeriod));const prev=months().filter(m=>m<reportMonth).pop();if(prev){const p=displayStats('monthly',prev);document.getElementById('cmpIncome').textContent=money(s.inc-p.inc);document.getElementById('cmpExpense').textContent=money(s.exp-p.exp);document.getElementById('cmpSaved').textContent=money(s.saved-p.saved);document.getElementById('cmpRate').textContent=hidden?'••••':((s.rate-p.rate>=0?'+':'')+(s.rate-p.rate).toFixed(1)+' pp')}else['cmpIncome','cmpExpense','cmpSaved','cmpRate'].forEach(id=>document.getElementById(id).textContent='—');const reviews=data.tx.map((t,i)=>({t,i})).filter(x=>x.t.review);document.getElementById('reviewCount').textContent=reviews.length;document.getElementById('reviewList').innerHTML=reviews.length?reviews.map(x=>`<button class="secondary full reviewBtn" data-review="${x.i}">${x.t.merchant||'Transaction'} · ${money(x.t.amount)} · ${x.t.date}</button>`).join(''):'<div class="no-data">No transactions need review.</div>';const cats={};s.tx.filter(t=>t.type==='expense').forEach(t=>cats[t.category||'Other']=(cats[t.category||'Other']||0)+Number(t.amount||0));document.getElementById('reportCats').innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="statement"><div class="row"><span>${k}</span><b>${money(v)}</b></div></div>`).join('')||'<div class="no-data">No expenses.</div>';const incs={};s.tx.filter(t=>t.type==='income').forEach(t=>incs[t.category||'Income']=(incs[t.category||'Income']||0)+Number(t.amount||0));if(!Object.keys(incs).length)incs['Recurring income']=s.inc;document.getElementById('reportIncome').innerHTML=Object.entries(incs).map(([k,v])=>`<div class="statement"><div class="row"><span>${k}</span><b>${money(v)}</b></div></div>`).join('');document.getElementById('trend').innerHTML=months().map(m=>{const x=displayStats('monthly',m);return `<div class="statement"><div class="row"><b>${monthLabel(m)}</b><span>${money(x.saved)}</span></div><div class="muted">Income ${money(x.inc)} · Expenses ${money(x.exp)} · Rate ${pct(x.rate)}</div></div>`}).join('')}
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));window.scrollTo(0,0)}
 function saveIncome(){data.income={salary:Number(document.getElementById('salary').value)||0,extra:Number(document.getElementById('extra').value)||0,bsf:Number(document.getElementById('bsf').value)||0};localStorage.setItem(INCOME,JSON.stringify(data.income));save();document.getElementById('incomeStatus').textContent='Saved ✓';toast('Monthly income saved');renderDashboard();renderReports();setTimeout(()=>document.getElementById('incomeStatus').textContent='',2000)}
 function saveNW(){const a={},d={};document.querySelectorAll('[data-nw]').forEach(el=>{const k=el.dataset.nw;const v=Number(el.value)||0;if(['Loans','Credit Cards'].includes(k))d[k]=v;else a[k]=v});data.assets={...data.assets,...a};data.debts={...data.debts,...d};localStorage.setItem(NW,JSON.stringify({assets:data.assets,debts:data.debts}));save();document.getElementById('nwStatus').textContent='Saved ✓';toast('Net worth saved');renderDashboard();setTimeout(()=>document.getElementById('nwStatus').textContent='',2000)}
-function openReview(i){const t=data.tx[i];if(!t)return;document.getElementById('modalTitle').textContent='Review transaction';document.getElementById('modalBody').innerHTML=`<div class="card"><b>${t.merchant||'Transaction'}</b><div class="muted">${t.date} · ${t.source}</div><div style="font-size:24px;font-weight:800;margin-top:10px">${money(t.amount)}</div></div><div class="muted">Choose classification</div><button class="secondary full reviewBtn" data-approve="${i}:income">Income</button><button class="secondary full reviewBtn" data-approve="${i}:expense">Expense</button><button class="secondary full reviewBtn" data-approve="${i}:transfer">Transfer</button><button class="secondary full reviewBtn" data-approve="${i}:investment">Investment</button><button class="secondary full reviewBtn" data-approve="${i}:cash">Cash Withdrawal</button>`;document.getElementById('modal').classList.add('open')}
-function approve(i,c){const t=data.tx[i];if(!t)return;if(c==='income'){t.type='income';t.category=t.category||'Income'}else if(c==='expense'){t.type='expense';t.category=t.category==='Income'?'Other':t.category||'Other'}else if(c==='investment'){t.type='investment';t.category=t.category||'Investment'}else{t.type='transfer';t.category=c==='cash'?'Cash Withdrawal':'Transfer'}t.review=false;save();document.getElementById('modal').classList.remove('open');renderTransactions();renderReports();toast('Transaction updated')}
+function openReview(i){const t=data.tx[i];if(!t)return;document.getElementById('modalTitle').textContent='Review transaction';document.getElementById('modalBody').innerHTML=`<div class="card"><b>${t.merchant||'Transaction'}</b><div class="muted">${t.date} · ${t.source}</div><div style="font-size:24px;font-weight:800;margin-top:10px">${money(t.amount)}</div></div><div class="muted">Choose classification</div><button class="secondary full reviewBtn" data-approve="${i}:income">Income</button><button class="secondary full reviewBtn" data-approve="${i}:expense">Expense</button><button class="secondary full reviewBtn" data-approve="${i}:transfer">Transfer</button><button class="secondary full reviewBtn" data-approve="${i}:cash">Cash Withdrawal</button>`;document.getElementById('modal').classList.add('open')}
+function approve(i,c){const t=data.tx[i];if(!t)return;if(c==='income'){t.type='income';t.category='Income'}else if(c==='expense'){t.type='expense';t.category=t.category==='Income'?'Other':t.category||'Other'}else{t.type='transfer';t.category=c==='cash'?'Cash Withdrawal':'Transfer'}t.review=false;save();document.getElementById('modal').classList.remove('open');renderTransactions();renderReports();toast('Transaction updated')}
 function reset(){if(!confirm('Delete all stored Wealth data on this iPhone?'))return;data=empty();localStorage.removeItem(NW);localStorage.removeItem(INCOME);save();render();toast('All data cleared')}
 function exportJSON(){const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Naif-Wealth-Backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
 function exportPDF(){window.print()}
-function normDigits(v){return String(v||'').replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/٬/g,',').replace(/٫/g,'.')}
-function cleanText(v){return normDigits(v).normalize('NFKC').replace(/[\u200e\u200f\u202a-\u202e]/g,' ').replace(/\s+/g,' ').trim()}
-function numSAR(v){return Number(String(v||'').replace(/,/g,''))||0}
-function classifyBlock(block,debit,credit){
- const x=cleanText(block).toLowerCase();
- if(debit<=0&&credit<=0)return {type:'transfer',category:'Transfer',merchant:'Transaction',review:false};
- if(/خصم أقساط|t24 inst|paym\.inst|loan/.test(x))return {type:'expense',category:'Financing',merchant:'Financing installment',review:false};
- if(/خصم مستحقات البطاقات|advance payment for card|visa\/mastercard : advance payment/.test(x))return {type:'transfer',category:'Credit Card Payment',merchant:'Credit card payment',review:false};
- if((x.includes('تحويل')&&x.includes('الراجحي المالية'))||x.includes('investment account'))return {type:'transfer',category:'Investment Transfer',merchant:'Investment account transfer',review:false};
- if((x.includes('تحويل')&&x.includes('داخلية'))||x.includes('تحويل بين حسابات العميل')||x.includes('internal transfer'))return {type:'transfer',category:'Internal Transfer',merchant:'Internal transfer',review:false};
- if(/السبائك - شراء الذهب|شراء الذهب|gold/.test(x))return {type:'investment',category:'Gold Investment',merchant:'Gold purchase',review:false};
- if(/مدفوعات مساند|et aferahu|etaferahu|barq safe account/.test(x))return {type:'expense',category:/barq safe/i.test(x)?'Driver Salary':'Household Salary',merchant:/barq safe/i.test(x)?'Driver salary':'Housemaid salary',review:false};
- if(/إضافة راتب|salary|payroll/.test(x))return {type:'income',category:'Salary',merchant:'Salary',review:false};
- if(/مدفوعات فيزا|visa\/mastercard : refund|refund/.test(x))return {type:'income',category:'Card Refund',merchant:'Card refund',review:false};
- if(/فواتير نظام سداد|sadad/.test(x))return {type:'expense',category:'Bills',merchant:'SADAD bill',review:debit>=10000};
- if(/شراء عبر نقاط البيع|apple pay|pos/.test(x))return {type:'expense',category:'Shopping',merchant:'Card / POS purchase',review:debit>=10000};
- if(/سحب - الصراف الآلي|atm|cash withdrawal/.test(x))return {type:'expense',category:'Cash Withdrawal',merchant:'Cash withdrawal',review:debit>=10000};
- if(/رسوم حوالة|fee/.test(x))return {type:'expense',category:'Bank Fees',merchant:'Bank transfer fee',review:false};
- if((x.includes('حوالة')&&x.includes('واردة'))||x.includes('incoming transfer'))return {type:'income',category:'Incoming Transfer',merchant:'Incoming transfer',review:credit>=10000};
- if((x.includes('حوالة')&&x.includes('صادرة'))||x.includes('outgoing transfer'))return {type:'expense',category:'Transfers to Others',merchant:'Outgoing transfer',review:debit>=10000};
- if(debit>0)return {type:'expense',category:'Other',merchant:'Other expense',review:debit>=10000};
- if(credit>0)return {type:'income',category:'Other Income',merchant:'Other income',review:credit>=10000};
- return {type:'transfer',category:'Transfer',merchant:'Transaction',review:false};
-}
-async function sha256(file){const b=await file.arrayBuffer();const h=await crypto.subtle.digest('SHA-256',b);return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-function parseStatementPageText(raw,pageNo){
- const text=cleanText(raw); if(pageNo===1)return [];
- const matches=[...text.matchAll(/20\d{2}[\/-]\d{2}[\/-]\d{2}/g)]; const out=[];
- for(let i=0;i<matches.length;i++){
-   const date=matches[i][0].replaceAll('/','-');
-   const block=text.slice(i?matches[i-1].index:0,matches[i].index);
-   const am=[...block.matchAll(/([\d,]+\.\d{2})\s*SAR/gi)].map(m=>numSAR(m[1]));
-   if(am.length<3)continue;
-   const balance=am[am.length-3], credit=am[am.length-2], debit=am[am.length-1];
-   const desc=block.slice(Math.max(0,block.lastIndexOf('SAR',Math.max(0,block.length-1))-180));
-   const c=classifyBlock(block,debit,credit);
-   out.push({date,amount:debit>0?debit:credit,type:c.type,category:c.category,merchant:c.merchant,review:c.review,source:'Bank statement',balance,credit,debit,raw:desc});
- }
- return out;
-}
 async function importPDF(files){
- const box=document.getElementById('importResults');box.innerHTML='';
- try{
-   if(!window.pdfjsLib)window.pdfjsLib=await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs');
-   const all=[];
-   for(const file of files){
-     const fileId=await sha256(file);
-     if(!window.pdfjsLib)throw new Error('PDF engine unavailable');
-     const pdf=await window.pdfjsLib.getDocument({data:await file.arrayBuffer(),disableWorker:true,isEvalSupported:false}).promise;
-     let txs=[];let monthSet=new Set();
-     for(let p=1;p<=pdf.numPages;p++){
-       const page=await pdf.getPage(p);const c=await page.getTextContent();const raw=c.items.map(x=>x.str).join(' ');
-       const rows=parseStatementPageText(raw,p);rows.forEach(t=>{t.source=file.name;t.sourceId=fileId;monthSet.add(monthKey(t.date));txs.push(t)});
-     }
-     txs=txs.filter(t=>t.amount>0&&/^20\d{2}-\d{2}-\d{2}$/.test(t.date));
-     // Re-importing the exact same PDF replaces its previous extraction.
-     data.tx=data.tx.filter(t=>t.sourceId!==fileId);
-     const seen=new Set(data.tx.map(t=>t.uid).filter(Boolean));
-     let added=0;
-     txs.forEach(t=>{t.uid=[t.date,t.type,t.amount,t.credit||0,t.debit||0,t.balance||0,t.category,t.merchant].join('|');if(!seen.has(t.uid)){data.tx.push(t);seen.add(t.uid);added++}});
-     data.statements=data.statements.filter(s=>s.fileId!==fileId);
-     const mm=[...monthSet].filter(Boolean).sort();
-     data.statements.push({name:file.name,fileId,transactions:added,totalTransactions:txs.length,months:mm,month:mm[0]||DEFAULT,period:mm.length>1?monthLabel(mm[0])+' → '+monthLabel(mm[mm.length-1]):monthLabel(mm[0]||DEFAULT)});
-     box.innerHTML+=`<div class="statement"><div class="row"><b>${file.name}</b><span class="status">Imported</span></div><div class="muted">${added} transactions · ${mm.map(monthLabel).join(' · ')||'Dates not detected'}</div></div>`;
-     all.push(...txs);
+const box=document.getElementById('importResults');box.innerHTML='';
+try{
+ if(!window.pdfjsLib){window.pdfjsLib=await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs')}
+ for(const file of files){
+  const buf=await file.arrayBuffer();
+  const pdf=await window.pdfjsLib.getDocument({data:new Uint8Array(buf),disableWorker:true,useWorkerFetch:false,isEvalSupported:false}).promise;
+  let text='';
+  for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p);const c=await page.getTextContent();text+='\n'+c.items.map(x=>x.str).join(' ')}
+  const dates=[...text.matchAll(/20\d{2}[\/-]\d{2}[\/-]\d{2}/g)].map(x=>x[0].replaceAll('/','-'));
+  const uniq=[...new Set(dates)].sort();const mm=[...new Set(uniq.map(monthKey).filter(Boolean))].sort();
+  const amount=/([\d,]+\.\d{2})\s*SAR/g; const tx=[]; let last=0;
+  for(const dm of text.matchAll(/(20\d{2}[\/-]\d{2}[\/-]\d{2})/g)){
+   const date=dm[1].replaceAll('/','-'); if(!/^20\d{2}-\d{2}-\d{2}$/.test(date))continue;
+   const before=text.slice(last,dm.index); const nums=[...before.matchAll(amount)].map(x=>Number(x[1].replaceAll(',','')));
+   if(nums.length>=3){const a=nums.slice(-3);const credit=a[1],debit=a[2];const value=credit>0?credit:debit;const type=credit>0?'income':'expense';
+    const windowText=before.slice(Math.max(0,before.length-1200));
+    const merchant=(windowText.match(/(?:Payroll|BARQ SAFE ACCOUNT|Advance payment[^\n]*|Refund[^\n]*|Pay Apple[^\n]*|SADAD|Sukuk Capital|CORPO RATE CO LTD|PG against|LOAN [0-9A-Z]+)/i)||[])[0]||'Transaction';
+    let category='Other', finalType=type, review=false;
+    if(/Advance payment/i.test(windowText)) finalType='transfer',category='Credit Card Payment';
+    if(/Refund/i.test(windowText)) finalType='income',category='Card Refund';
+    if(/LOAN/i.test(windowText)) finalType='expense',category='Financing';
+    if(/Payroll/i.test(windowText)) finalType='income',category='Salary';
+    if(/BARQ SAFE ACCOUNT/i.test(windowText)) finalType='expense',category='Driver Salary';
+    if(/ETAFERAHU/i.test(windowText)) finalType='expense',category='Housemaid Salary';
+    if(/PG against/i.test(windowText)) finalType='transfer',category='Gold Purchase';
+    if(/TO\/07701608018880267|TOACCT.*سلطان/i.test(windowText)) finalType='transfer',category='Internal Transfer';
+    if(/FRACCT.*NAIF|تحويل من حساب الراجحي المالية/i.test(windowText)) finalType='transfer',category='Investment Transfer';
+    if(/W#|SADAD/i.test(windowText)) finalType='expense',category='Bills';
+    if(/Pay Apple/i.test(windowText)) finalType='expense',category='Shopping';
+    if(value>=10000 && !['Credit Card Payment','Financing','Driver Salary','Housemaid Salary','Internal Transfer','Investment Transfer'].includes(category))review=true;
+    tx.push({date,amount:value,type:finalType,category,merchant,source:file.name,review});
    }
-   save();reportMonth=latestMonth();render();toast('Statement imported');
- }catch(e){console.error(e);box.innerHTML='<div class="review">Could not read this PDF. Please make sure the iPhone is online while importing the statement.</div>'}
-}
+   last=dm.index;
+  }
+  // Remove obvious duplicates created by repeated statement uploads.
+  const fresh=tx.filter(t=>!data.tx.some(x=>x.date===t.date&&Number(x.amount)===Number(t.amount)&&x.source===file.name&&x.merchant===t.merchant));
+  data.tx.push(...fresh);
+  data.statements=data.statements.filter(s=>s.name!==file.name);
+  data.statements.push({name:file.name,transactions:fresh.length,months:mm,month:mm[0]||DEFAULT,period:mm.length>1?monthLabel(mm[0])+' → '+monthLabel(mm[mm.length-1]):monthLabel(mm[0]||DEFAULT)});
+  box.innerHTML+=`<div class="statement"><div class="row"><b>${file.name}</b><span class="status">Imported</span></div><div class="muted">${mm.length?mm.map(monthLabel).join(' · '):'Dates not detected'} · ${fresh.length} transactions</div></div>`;
+ }
+ save();reportMonth=latestMonth();render();toast('Statement imported');
+}catch(e){box.innerHTML='<div class="review">Could not read this PDF. Please try again while the iPhone is online.</div>';console.error(e)}}
 // One delegated touch/click handler. No inline handlers, no module dependency.
 document.addEventListener('click',function(e){const b=e.target.closest('button');if(!b)return;const a=b.dataset.action;if(a==='privacy'){hidden=!hidden;localStorage.setItem('naif-hide',hidden?'1':'0');render();return}if(b.dataset.tab){showScreen(b.dataset.tab);return}if(b.dataset.period){dashPeriod=b.dataset.period;renderDashboard();return}if(b.dataset.filter){txFilter=b.dataset.filter;renderTransactions();return}if(a==='goStatements'){showScreen('statements');return}if(b.dataset.reportPeriod){reportPeriod=b.dataset.reportPeriod;renderReports();return}if(a==='saveIncome'){saveIncome();return}if(a==='saveNW'){saveNW();return}if(a==='reset'){reset();return}if(a==='exportJSON'){exportJSON();return}if(a==='exportPDF'){exportPDF();return}if(a==='closeModal'){document.getElementById('modal').classList.remove('open');return}if(b.dataset.review!==undefined){openReview(Number(b.dataset.review));return}if(b.dataset.approve){const [i,c]=b.dataset.approve.split(':');approve(Number(i),c);return}},false);
 document.getElementById('reportMonth').addEventListener('change',e=>{reportMonth=e.target.value;render()});document.getElementById('pdfInput').addEventListener('change',e=>{if(e.target.files.length)importPDF([...e.target.files]);e.target.value='' });
